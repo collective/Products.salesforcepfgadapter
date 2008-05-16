@@ -1,0 +1,116 @@
+# Integration tests specific to Salesforce adapter
+#
+
+import os, sys, email
+
+if __name__ == '__main__':
+    execfile(os.path.join(sys.path[0], 'framework.py'))
+
+from Products.salesforcepfgadapter.tests import base
+from Products.CMFCore.utils import getToolByName
+
+from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
+
+class FakeRequest(dict):
+    
+    def __init__(self, **kwargs):
+        self.form = kwargs
+
+class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
+    """ test adapters that create separate, related objects """
+    
+    def afterSetUp(self):        
+        self.portal.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
+        self.salesforce = getToolByName(self.portal, "portal_salesforcebaseconnector")
+        self.salesforce.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
+        self._todelete = list() # keep track of ephemeral test data to delete
+        self.folder.invokeFactory('FormFolder', 'ff1')
+        self.ff1 = getattr(self.folder, 'ff1')
+    
+    def beforeTearDown(self):
+        """clean up SF data"""
+        ids = self._todelete
+        if ids:
+            while len(ids) > 200:
+                self.salesforce.delete(ids[:200])
+                ids = ids[200:]
+            self.salesforce.delete(ids)
+    
+    def testGetLocalSFAdapters(self):
+        """getLocalSFAdapters is used just to populate the DataGridField with names of
+        all other local adapters besides self"""
+        # create two adapters
+        for x in range(3):
+            self.ff1.invokeFactory('SalesforcePFGAdapter', 'adapter%s' % x)
+            item = getattr(self.ff1, 'adapter%s' % x)
+            item.setTitle('Adapter #%s' % x)
+        
+        # we'll grab the first one -- calling getLocalSFAdapters should just return the other two
+        # not the first one and not the by-default-created Mailer adapter
+        first = getattr(self.ff1, 'adapter0')
+        adapter_names = [mapping.initialData['adapter_name'] for mapping in first.getLocalSFAdapters()]
+        adapter_ids = [mapping.initialData['adapter_id'] for mapping in first.getLocalSFAdapters()]
+        for x in range(1,3):
+            self.failUnless('Adapter #%s' % x in adapter_names)
+            self.failUnless('adapter%s' % x in adapter_ids)
+        self.failIf('Adapter #0' in adapter_names)
+        # implicit test that the Mailer adapter isn't here: len should be 2
+        self.failUnless(len(adapter_names)==2)
+        
+
+    def testChainedDependenciesInsertCorrectly(self):
+        # create multiple action adapters
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'contact_adapter')
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'account_adapter')
+        
+        # disable mailer adapter
+        self.ff1.setActionAdapter(('contact_adapter','account_adapter',))
+        
+        # configure our contact_adapter to create a contact on submission
+        # last name is the lone required field
+        self.ff1.contact_adapter.setTitle('Salesforce Contact Action Adapter')
+        self.ff1.contact_adapter.setExecCondition('python:1')
+        self.ff1.contact_adapter.setSFObjectType('Contact')
+        self.ff1.contact_adapter.setFieldMap((
+            {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
+        
+        # configure our account_adapter to create a contact on submission
+        # last name is the lone required field
+        self.ff1.account_adapter.setTitle('Salesforce Account Action Adapter')
+        self.ff1.account_adapter.setExecCondition('python:1')
+        self.ff1.account_adapter.setSFObjectType('Account')
+        self.ff1.account_adapter.setFieldMap((
+            {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'Name'},))
+        
+        # set up dependencies
+        self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
+                                                    'sf_field':'AccountId'},))
+        request = FakeRequest(topic="testChainedDependenciesInsertCorrectly",
+                              replyto = 'testChainedDependenciesInsertCorrectly@plone.org',
+                              comments='testChainedDependenciesInsertCorrectly')
+        # call onSuccess on last SF adapter in form
+        fields = self.ff1._getFieldObjects()
+        self.ff1.account_adapter.onSuccess(fields, request)
+        
+        # salesforce queries and cleanup
+        contact_res = self.salesforce.query(['Id','AccountId',],
+                                            'Contact',
+                                            """LastName = 'testChainedDependenciesInsertCorrectly' \
+                                            AND Email = 'testChainedDependenciesInsertCorrectly@plone.org'""")
+        self._todelete.append(contact_res['records'][0]['Id']) # for clean-up
+
+        account_res = self.salesforce.query(['Id',], 'Account', "Name = 'testChainedDependenciesInsertCorrectly'")
+        account_id = account_res['records'][0]['Id']
+        self._todelete.append(account_id) # for clean-up
+
+        # assertions
+        self.assertEqual(1, contact_res['size'])
+        self.assertEqual(1, account_res['size'])
+        self.assertEqual(account_id, contact_res['records'][0]['AccountId'])
+
+def test_suite():
+    from unittest import TestSuite, makeSuite
+    suite = TestSuite()
+    suite.addTest(makeSuite(TestChainedAdapters))
+    return suite

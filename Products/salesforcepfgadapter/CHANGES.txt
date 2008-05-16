@@ -1,0 +1,101 @@
+(svn/unreleased)
+
+- Modification [developer's name]
+
+1.5a1
+
+- Adding new DataGridField FixedColumn with visibility set to false for the
+  the 'fieldMap' schema field on the Salesforce Adapter, which stores the relative
+  path from the parent form to the field in question.  Previously, we were 'building'
+  the data structure for the soon to be created Salesforce object based on mappings
+  keyed off of each field's title.  Since titles aren't necessarily unique, this
+  was fragile and with the introduction of support for mapping fieldset-based fields,
+  the code was getting ridiculous.  *NOTE*: If jumping to this version of 
+  salesforcepfgadpater from previous versions, you'll need to reinstall
+  the product from the ZMI or the Add/Remove Products control panel.  
+  This will trigger the migration of all existing Salesforce Adapter objects, 
+  to include this essential new column for the field map. [andrewb]
+
+- Reworking overly fragile 'do we need to migrate' infrastructure for versions
+  prior to 1.0rc1 which assumed that we'd be listing all known versions to the 
+  end of time and also that running a profiles steps wouldn't bump the installedversion 
+  attribute on an installed product, as it now appears to do in CMFQIT 
+  version 2.1.4. This should allow for a simultaneous Plone 3.1.x migration and 
+  Salesforce PFG Adapter upgrade. [andrewb]
+
+- Added support for form fields within a folderish "fieldset" both from a
+  mapping and creation within Salesforce.com objects perspective. [andrewb]
+
+- Adding test/code coverage protecting against a maximum recursion depth 
+  exceeded error via a direct call to getSortedSFAdapters.  This is feasible 
+  in the case where Salesforce Adapters are configured outside the context
+  of the existing Archetype validation code. [andrewb]
+
+- Added support for "chained adapters" (that is, forms that create
+  separate, but linked SF objects) including: schema extensions for adapters,
+  validation against circular chains, and execution of chains in the correct order. [jbaldivieso, andrewb]
+
+1.0 - released April 4, 2008
+
+- Added test coverage of onSuccess, the critical piece in ensuring that
+  our form values make their way into Salesforce.com as the appropriate
+  SFObject type with configured mapping.  I suppose test coverage of
+  the main functionality is okay during an rc cycle :) [andrewb]
+
+1.0rc2
+
+- Using proper Generic Setup API "runAllImportStepsFromProfile", rather
+  than deprecated "setImportContext".  For more information, see the very helpful:
+  http://www.nabble.com/Product-install-regression--td14165955.html#a14165955 [andrewb]
+
+- Cleaning up naughty "import *" statement within Install.py [andrewb]
+
+1.0rc1
+
+- Providing test and migration for legacy adapters that didn't have the 
+  capability to mark required fields in the UI [andrewb, jessesnyder]
+
+- Renaming the Salesforce PFG Adapter's archetype_name to Salesforce 
+  Adapter, in attempt to increase non-technical accessibility.
+  Provided migration for the same [andrewb, jessesnyder]
+
+ - Add zope security checks to methods in the SalesforcePFGAdapter class [jessesnyder]
+
+ - Tweaked i18n infrastructure and added German translation. [davisagli]
+
+ - Don't show extraneous schemata in Plone3 [jessesnyder]
+ 
+ - Ran Zope's test coverage feature against our code base and extended test coverage
+   to key parts of the public aspects of our code base [andrewb]
+
+ - Implement IMultiPageSchema so that schemata can be processed separately and in order, since
+   the field mapping schemata depends on the default schemata being submitted first. [jessesnyder]
+   
+ - Re-ordered the adapter's schemata to put 'field mapping' before
+   'overrides'. [davisagli]
+
+ - Worked around FGDateField issue to format submitted dates properly for Salesforce.com input.  
+   Used DateTime.HTML4() method on field value [ghnatiuk, davisagli]
+
+ - Adding labeling to the field mapping ui to show those fields for the 
+   chosen SFObject, which are non-nillable (i.e required) and don't have a 
+   computed value (i.e. as in a unique id, which is required but you have no 
+   control over) [jessesnyder, andrewb]
+   
+ - Sorting of fields that are required first, then those that are optional
+   second in the field mapping ui [jessesnyder, andrewb]
+
+1.0-alpha2
+
+ - Worked around issue where the DataGridField strips proceeding/trailing spaces for its FixedRow 
+   values, but our generateFormFieldRows method did not, thus each save of the adapter produced duplicate
+   mappings in the DataGridField UI [jessesnyder, andrewb]
+
+ - Providing custom mutator for the field map user interface, which now auto-cleans up those fields
+   that have been removed or re-titled [jessesnyder, andrewb]
+
+1.0-alpha1
+
+ - Initial import and creation of standalone product initially created at the following branch:
+   http://svn.plone.org/svn/collective/PloneFormGen/branches/salesforce_adapter_branch/
+
