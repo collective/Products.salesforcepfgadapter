@@ -183,8 +183,8 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         
         # set fields on the adapter
         adapter.setTitle('Salesforce Action Adapter')
-        adapter.setExecCondition('python:1')
         adapter.setSFObjectType('Contact')
+        adapter.setExecCondition('python:1')
         adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
             {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'Description'}))
@@ -433,7 +433,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # configure our action adapter to create a contact on submission
         # last name is the lone required field
         self.ff1.contact_adapter.setTitle('Salesforce Action Adapter')
-        self.ff1.contact_adapter.setExecCondition('python:1')
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
@@ -469,7 +468,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # configure our contact_adapter to create a contact on submission
         # last name is the lone required field
         self.ff1.contact_adapter.setTitle('Salesforce Contact Action Adapter')
-        self.ff1.contact_adapter.setExecCondition('python:1')
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
@@ -478,7 +476,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # configure our account_adapter to create a contact on submission
         # last name is the lone required field
         self.ff1.account_adapter.setTitle('Salesforce Account Action Adapter')
-        self.ff1.account_adapter.setExecCondition('python:1')
         self.ff1.account_adapter.setSFObjectType('Account')
         self.ff1.account_adapter.setFieldMap((
             {'field_path':'comments', 'form_field': 'Comments', 'sf_field': 'Name'},))
@@ -560,7 +557,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # last name is the lone required field, but we map a few others 
         # and our fieldset field ...
         self.ff1.contact_adapter.setTitle('Salesforce Contact Action Adapter')
-        self.ff1.contact_adapter.setExecCondition('python:1')
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},

@@ -2,6 +2,22 @@
 
 - Modification [developer's name]
 
+1.5a2 (svn/unreleased)
+
+- In order to reduce the configuration burden upon the user (i.e. placing Salesforce 
+  Adapters in the order they will need to operate), we build and run adapters from 
+  the final adapter within the folder.  This adapter in turn manages the needed 
+  order and creates the Salesforce records appropriately.  The 1.5a1 release, 
+  however, does not account for disabled adapters.  I.E. those that are checked 
+  off in the form folder's adapter field. This is now fixed. See 
+  http://plone.org/products/salesforcepfgadapter/issues/3 [andrewb]
+
+- In the same category as the following issue: 
+  http://plone.org/products/salesforcepfgadapter/issues/3, we need to account 
+  for those adapters with an "execCondition" that fails. This is now fixed. See 
+  http://plone.org/products/salesforcepfgadapter/issues/4 [andrewb]
+
+
 1.5a1
 
 - Adding new DataGridField FixedColumn with visibility set to false for the

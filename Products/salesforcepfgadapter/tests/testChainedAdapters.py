@@ -69,7 +69,6 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         # configure our contact_adapter to create a contact on submission
         # last name is the lone required field
         self.ff1.contact_adapter.setTitle('Salesforce Contact Action Adapter')
-        self.ff1.contact_adapter.setExecCondition('python:1')
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
@@ -78,7 +77,6 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         # configure our account_adapter to create a contact on submission
         # last name is the lone required field
         self.ff1.account_adapter.setTitle('Salesforce Account Action Adapter')
-        self.ff1.account_adapter.setExecCondition('python:1')
         self.ff1.account_adapter.setSFObjectType('Account')
         self.ff1.account_adapter.setFieldMap((
             {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'Name'},))
@@ -108,6 +106,128 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.assertEqual(1, contact_res['size'])
         self.assertEqual(1, account_res['size'])
         self.assertEqual(account_id, contact_res['records'][0]['AccountId'])
+    
+    def testChainedAdaptersAccountsForDisabledAdapters(self):
+        """We delegate the creation of all Salesforce objects for
+           each adapter to the final adapter.  This final adapter,
+           however, must be an adapter that's enabled (i.e. present
+           in the getActionAdapter list). Here we ensure that all
+           active adapters are successfully run (this would be done
+           by the final active adapter -- but that is an unimportant
+           implementation detail.)
+        """
+        # create multiple action adapters
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'contact_adapter')
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'account_adapter')
+        
+        # disable mailer adapter, and more importantly for our case,
+        # we disable the account_adapter, which is the final Salesforce
+        # Adapter within the form folder
+        self.ff1.setActionAdapter(('contact_adapter',))
+        
+        # configure our contact_adapter to create a contact on submission
+        # last name is the lone required field
+        self.ff1.contact_adapter.setTitle('Salesforce Contact Action Adapter')
+        self.ff1.contact_adapter.setSFObjectType('Contact')
+        self.ff1.contact_adapter.setFieldMap((
+            {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
+        
+        # configure our account_adapter to create a contact on submission
+        # last name is the lone required field
+        self.ff1.account_adapter.setTitle('Salesforce Account Action Adapter')
+        self.ff1.account_adapter.setSFObjectType('Account')
+        self.ff1.account_adapter.setFieldMap((
+            {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'Name'},))
+        
+        # set up dependencies
+        self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
+                                                    'sf_field':'AccountId'},))
+        request = FakeRequest(topic="testChainedRespectDisabledFinalAdapters",
+                              replyto = 'testChainedRespectDisabledFinalAdapters@plone.org',
+                              comments='testChainedRespectDisabledFinalAdapters')
+        fields = self.ff1._getFieldObjects()
+        
+        # call onSuccess on last *active* SF adapter in form
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # salesforce queries and cleanup
+        contact_res = self.salesforce.query(['Id','AccountId',],
+                                            'Contact',
+                                            """LastName = 'testChainedRespectDisabledFinalAdapters' \
+                                            AND Email = 'testChainedRespectDisabledFinalAdapters@plone.org'""")
+        self._todelete.append(contact_res['records'][0]['Id']) # for clean-up
+        
+        account_res = self.salesforce.query(['Id',], 'Account', "Name = 'testChainedRespectDisabledFinalAdapters'")
+        
+        # assertions
+        self.assertEqual(1, contact_res['size'])
+        self.assertEqual(0, account_res['size'])
+        self.failIf(contact_res['records'][0]['AccountId'])
+    
+    def testChainedAdaptersAccountsForNonexecutingAdapters(self):
+        """We delegate the creation of all Salesforce objects for
+           each adapter to the final adapter.  This final adapter,
+           however, must be an adapter that's enabled (i.e. present
+           in the getActionAdapter list). Here we ensure that all
+           active adapters are successfully run (this would be done
+           by the final active adapter -- but that is an unimportant
+           implementation detail.)
+        """
+        # create multiple action adapters
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'contact_adapter')
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'account_adapter')
+        
+        # disable mailer adapter
+        self.ff1.setActionAdapter(('contact_adapter','account_adapter',))
+        
+        # configure our contact_adapter to create a contact on submission
+        # last name is the lone required field
+        self.ff1.contact_adapter.setTitle('Salesforce Contact Action Adapter')
+        self.ff1.contact_adapter.setSFObjectType('Contact')
+        # ... but configure a totally bogus execution
+        # condition that could never be true
+        self.ff1.contact_adapter.setFieldMap((
+            {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
+        
+        # configure our account_adapter to create a contact on submission
+        # last name is the lone required field
+        self.ff1.account_adapter.setTitle('Salesforce Account Action Adapter')
+        self.ff1.account_adapter.setSFObjectType('Account')
+        self.ff1.account_adapter.setExecCondition('python:1 == 0')
+        self.ff1.account_adapter.setFieldMap((
+            {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'Name'},))
+        
+        # set up dependencies
+        self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
+                                                    'sf_field':'AccountId'},))
+        request = FakeRequest(topic="testChainedRespectNonexecutableFinalAdapters",
+                              replyto = 'testChainedRespectNonexecutableFinalAdapters@plone.org',
+                              comments='testChainedRespectNonexecutableFinalAdapters')
+        fields = self.ff1._getFieldObjects()
+        
+        # call onSuccess on last *executable* SF adapter in form
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # salesforce queries and cleanup
+        contact_res = self.salesforce.query(['Id','AccountId',],
+                                            'Contact',
+                                            """LastName = 'testChainedRespectNonexecutableFinalAdapters' \
+                                            AND Email = 'testChainedRespectNonexecutableFinalAdapters@plone.org'""")
+        self._todelete.append(contact_res['records'][0]['Id']) # for clean-up
+        
+        account_res = self.salesforce.query(['Id',], 'Account', "Name = 'testChainedRespectNonexecutableFinalAdapters'")
+        
+        # assertions
+        self.assertEqual(1, contact_res['size'])
+        self.assertEqual(0, account_res['size'])
+        self.failIf(contact_res['records'][0]['AccountId'])
+    
+    
+
+
+
 
 def test_suite():
     from unittest import TestSuite, makeSuite

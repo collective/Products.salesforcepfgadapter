@@ -17,7 +17,11 @@ from Acquisition import aq_parent
 from zope.interface import classImplements, providedBy
 from DateTime import DateTime
 
+# CMFCore
+from Products.CMFCore.Expression import getExprContext
+
 # Plone imports
+from Products.CMFPlone.utils import safe_hasattr
 from Products.Archetypes.public import StringField, SelectionWidget, \
     DisplayList, Schema, ManagedSchema
 from Products.ATContentTypes.content.schemata import finalizeATCTSchema
@@ -159,19 +163,26 @@ class SalesforcePFGAdapter(FormActionAdapter):
           and check the result
         """
         logger.debug('Calling onSuccess()')
-        formFolder = aq_parent(self)
-        
-        # only execute if we're the last SF Adapter in the form; then sort and execute ALL
-        if self.getId() == formFolder.objectIds(SF_ADAPTER_TYPES)[-1]:
+        # only execute if we're the last SF Adapter 
+        # in the form; then sort and execute ALL
+        execAdapters = self._listAllExecutableAdapters()
+        if len(execAdapters) and self.getId() == execAdapters[-1].getId():
             uids = {}
             for adapter_id in self.getSortedSFAdapters():
                 adapter = getattr(aq_parent(self), adapter_id)
+                if not adapter._isExecutableAdapter():
+                    logger.warn("""Adapter %s will not create a Salesforce object \
+                                   either do to its execution condition or it has been \
+                                   disabled on the parent form.""" % adapter.getId()) 
+                    continue
+                    
                 sObject = adapter._buildSObjectFromForm(fields, REQUEST)
                 if len(sObject.keys()) > 1:
                     salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
                     
                     # flesh out sObject with data returned from previous creates
-                    for (id,field) in [(adapter_map['adapter_id'], adapter_map['sf_field']) for adapter_map in adapter.getDependencyMap() if adapter_map['sf_field']]:
+                    for (id,field) in [(adapter_map['adapter_id'], adapter_map['sf_field']) for adapter_map in adapter.getDependencyMap() \
+                      if adapter_map['sf_field'] and getattr(aq_parent(self), adapter_map['adapter_id'])._isExecutableAdapter()]:
                         sObject[field] = uids[id]
                     
                     result = salesforce.create(sObject)[0]
@@ -396,6 +407,37 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 break
         
         return sfField
+    
+    def _isExecutableAdapter(self):
+        """Check possible conditions for when an adapter 
+           is disabled.  These include:
+           
+             1) non-true execCondition on the adapter
+             2) not active within the parent form folder
+        """
+        formFolder = aq_parent(self)
+        
+        if safe_hasattr(self, 'execCondition') and \
+          len(self.getRawExecCondition()):
+            # evaluate the execCondition.
+            # create a context for expression evaluation
+            context = getExprContext(formFolder, self)
+            return self.getExecCondition(expression_context=context)
+        
+        if self.getId() not in formFolder.getRawActionAdapter():
+            return False
+        
+        return True
+    
+    def _listAllExecutableAdapters(self):
+        """Ugh, we wake up all the Salesforce Adapters
+           to determine which are executable as determined above
+        """
+        formFolder = aq_parent(self)
+        adapters = formFolder.objectValues(SF_ADAPTER_TYPES)
+        
+        return [adapter for adapter in adapters if adapter._isExecutableAdapter()]
+        
     
     security.declareProtected(View, 'getSortedSFAdapters')
     def getSortedSFAdapters(self):
