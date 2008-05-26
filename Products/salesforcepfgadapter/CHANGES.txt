@@ -4,6 +4,12 @@
 
 1.5a2 (svn/unreleased)
 
+- Adding support for PloneFormGen's FormFileField type to be populated with a binary 
+  file and uploaded directly to Salesforce.com upon proper base64 encoding. There may 
+  be other use cases, but the Attachment type in Salesforce can be associated 
+  with any other type, as related by the ParentId, field and is where binary data, 
+  stored on the Body field, is typically associated with a record. [andrewb]
+
 - In order to reduce the configuration burden upon the user (i.e. placing Salesforce 
   Adapters in the order they will need to operate), we build and run adapters from 
   the final adapter within the folder.  This adapter in turn manages the needed 
