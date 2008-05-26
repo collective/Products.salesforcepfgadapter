@@ -586,8 +586,79 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # assert that our newly created Contact was found
         self.assertEqual(request.form['subformfield'], contact_res['records'][0]['FirstName'])
     
-
-
+    def testFileFieldsSavedToSalesforce(self):
+        """There may be other use cases, but the Attachment
+           type in Salesforce can be associated with any other
+           type and is where binary data, as stored on the Body
+           field, is typically associated with a record. Here
+           we confirm that a binary file can be mapped and
+           is succesfully posted to Salesforce.com via PloneFormGen's
+           FormFileField type.
+        """
+        def _createBinaryFile():
+            from cgi import FieldStorage
+            from ZPublisher.HTTPRequest import FileUpload
+            from tempfile import TemporaryFile
+            fp = TemporaryFile('w+b')
+            fp.write('\x00' + 'x' * (1 << 19))
+            fp.seek(0)
+            env = {'REQUEST_METHOD':'PUT'}
+            headers = {'content-type':'text/plain',
+                       'content-length': 1 << 19,
+                       'content-disposition':'attachment; filename=test.bin'}
+            fs = FieldStorage(fp=fp, environ=env, headers=headers)
+            return FileUpload(fs)
+        
+        # add a file field to our standard form
+        self.ff1.invokeFactory('FormFileField','filefield')
+        self.ff1.filefield.setTitle("File")
+        
+        # directly create a contact for association, since we need
+        # a valid parent id and don't care about related objects here
+        sObject = dict(type='Contact')
+        sObject['LastName'] = 'testFileFieldsSavedToSalesforce'
+        contact_create_res = self.salesforce.create(sObject)
+        
+        # get ready to cleanup regardless of test case success
+        self._todelete.append(contact_create_res[0]['id'])
+        
+        # create a attachmetn action adapter
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'attachment_adapter')
+        
+        # disable mailer adapter
+        self.ff1.setActionAdapter(('attachment_adapter',))
+        
+        # configure our attachment_adapter to create an Attachment on submission
+        self.ff1.attachment_adapter.setTitle('Salesforce Attachment Action Adapter')
+        self.ff1.attachment_adapter.setSFObjectType('Attachment')
+        
+        # bogus mapping to meet Attachment reqs
+        self.ff1.attachment_adapter.setFieldMap((
+            {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'ParentId'},
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'Name'},
+            {'field_path': 'filefield', 'form_field': 'File', 'sf_field': 'Body'},
+        ))
+        
+        # build the request and submit the form for both adapters
+        fields = self.ff1._getFieldObjects()
+        request = FakeRequest(replyto = contact_create_res[0]['id'], # mapped to ParentId (see above) 
+                              comments='test.bin',                   # mapped to Name (see above)
+                              filefield_file=_createBinaryFile())     # mapped to FirstName (see above)
+        
+        # call onSuccess 
+        self.ff1.attachment_adapter.onSuccess(fields, request)  
+        
+        # query for our attachment
+        attach_res = self.salesforce.query(['Id','Name','BodyLength',],
+                                            'Attachment',
+                                            "ParentId='%s'" % contact_create_res[0]['id'])
+        # in case we fail, stock up our to delete list for tear down
+        self._todelete.append(attach_res['records'][0]['Id'])
+        
+        # make our assertions
+        self.assertEqual('test.bin', attach_res['records'][0]['Name'])
+        self.failUnless(attach_res['records'][0]['BodyLength'] > 0)
+    
 
 
 def test_suite():
