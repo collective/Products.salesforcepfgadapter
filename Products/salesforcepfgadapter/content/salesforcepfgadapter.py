@@ -16,6 +16,13 @@ from AccessControl import ClassSecurityInfo
 from Acquisition import aq_parent
 from zope.interface import classImplements, providedBy
 from DateTime import DateTime
+from ZPublisher.HTTPRequest import FileUpload
+try:
+    # 3.0+
+    from zope.contenttype import guess_content_type
+except ImportError:
+    # 2.5
+    from zope.app.content_types import guess_content_type
 
 # CMFCore
 from Products.CMFCore.Expression import getExprContext
@@ -208,9 +215,20 @@ class SalesforcePFGAdapter(FormActionAdapter):
         sObject = dict(type=self.SFObjectType)
         for field in fields:
             formFieldPath = field.getPhysicalPath()
-            formFieldValue = REQUEST.form.get(field.fgField.getName(),'')
+            formFieldValue = REQUEST.form.get(field.getFieldFormName(),'')
             if field.meta_type == 'FormDateField':
-               formFieldValue = DateTime(formFieldValue + ' GMT+0').HTML4()
+                formFieldValue = DateTime(formFieldValue + ' GMT+0').HTML4()
+            elif field.isFileField():
+                file = formFieldValue
+                if file and isinstance(file, FileUpload) and file.filename != '':
+                    file.seek(0) # rewind
+                    data = file.read()
+                    filename = file.filename
+                    mimetype, enc = guess_content_type(filename, data, None)
+                    from base64 import encodestring
+                    formFieldValue = encodestring(data)
+                    
+            
             salesforceFieldName = self._getSFFieldForFormField(formFieldPath, formPath)
             if not salesforceFieldName:
                 continue
