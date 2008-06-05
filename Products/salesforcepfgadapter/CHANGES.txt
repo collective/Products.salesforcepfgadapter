@@ -4,6 +4,13 @@
 
 1.5a2 (svn/unreleased)
 
+- Better handling of empty FormDateField values, which were plagued by errors casting
+  to DateTime format and if successful an invalid xsd:dateTime format.  This resolves:
+  http://plone.org/products/salesforcepfgadapter/issues/6
+  http://plone.org/products/salesforcepfgadapter/issues/5 
+  Note: If a FormDateField was a required field and therefore came through as expected
+  in the request, this was handled properly [andrewb, thanks greenstork for bug report]
+
 - Adding support for PloneFormGen's FormFileField type to be populated with a binary 
   file and uploaded directly to Salesforce.com upon proper base64 encoding. There may 
   be other use cases, but the Attachment type in Salesforce can be associated 
