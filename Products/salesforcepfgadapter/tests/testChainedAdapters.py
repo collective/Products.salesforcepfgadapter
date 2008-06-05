@@ -51,8 +51,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.failIf('Adapter #0' in adapter_names)
         # implicit test that the Mailer adapter isn't here: len should be 2
         self.failUnless(len(adapter_names)==2)
-        
-
+    
     def testChainedDependenciesInsertCorrectly(self):
         # create multiple action adapters
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'contact_adapter')
@@ -219,9 +218,64 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.assertEqual(0, account_res['size'])
         self.failIf(contact_res['records'][0]['AccountId'])
     
+    def testRenamedAdapterCleanedFromStaticParentAdapterVocabs(self):
+        """Prove that retitling of an adapter shows the new
+           titling in the static parent adapter list.
+        """
+        for i in range(1,3):
+            self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce%s' % i)
+            self.ff1['salesforce%s' % i].setTitle('Salesforce Adapter #%i' % i)
+        
+        # salesforce2 could be a parent adapter to salesforce1
+        parentAdapterOptions = self.ff1.salesforce1.getLocalSFAdapters()
+        adapter_titles_for_mapping = [mapping.initialData['adapter_name'] for mapping in parentAdapterOptions]
+        
+        # make sure the subject field exists
+        self.failUnless('Salesforce Adapter #2' in adapter_titles_for_mapping)
+        
+        # rename the subject field
+        self.ff1.salesforce2.setTitle('Renamed Salesforce Adapter #2')
+        
+        # call our mutator to ensure that our mapping gets cleaned out
+        fm = self.ff1.salesforce1.getDependencyMap()
+        self.ff1.salesforce1.setDependencyMap(fm)
+        
+        regeneratedAdapterRowFields = self.ff1.salesforce1.getLocalSFAdapters()
+        regenerated_adapter_titles_for_mapping = [mapping.initialData['adapter_name'] for mapping in regeneratedAdapterRowFields]
+        
+        # make sure the subject field exists
+        self.failIf('Salesforce Adapter #2' in regenerated_adapter_titles_for_mapping)
+        self.failUnless('Renamed Salesforce Adapter #2' in regenerated_adapter_titles_for_mapping)
     
-
-
+    def testRemovedAdapterCleanedFromStaticParentAdapterVocabs(self):
+        """Prove that retitling of an adapter shows the new
+           titling in the static parent adapter list.
+        """
+        for i in range(1,4):
+            self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce%s' % i)
+            self.ff1['salesforce%s' % i].setTitle('Salesforce Adapter #%i' % i)
+        
+        # salesforce2 could be a parent adapter to salesforce1
+        parentAdapterOptions = self.ff1.salesforce1.getLocalSFAdapters()
+        adapter_titles_for_mapping = [mapping.initialData['adapter_name'] for mapping in parentAdapterOptions]
+        
+        # make sure the subject field exists
+        self.failUnless('Salesforce Adapter #2' in adapter_titles_for_mapping)
+        self.failUnless('Salesforce Adapter #3' in adapter_titles_for_mapping)
+        
+        # remove adapter #3 from contention
+        self.ff1.manage_delObjects(ids=['salesforce2'])
+        
+        # call our mutator to ensure that our mapping gets cleaned out
+        fm = self.ff1.salesforce1.getDependencyMap()
+        self.ff1.salesforce1.setDependencyMap(fm)
+        
+        regeneratedAdapterRowFields = self.ff1.salesforce1.getLocalSFAdapters()
+        regenerated_adapter_titles_for_mapping = [mapping.initialData['adapter_name'] for mapping in regeneratedAdapterRowFields]
+        
+        # make sure the subject field exists
+        self.failIf('Salesforce Adapter #2' in regenerated_adapter_titles_for_mapping)
+    
 
 
 def test_suite():
