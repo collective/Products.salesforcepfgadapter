@@ -170,6 +170,10 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         adapter = self.ff1.salesforce
         
+        # add a possible parent adapter
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce2')
+        self.ff1.salesforce2.setTitle('salesforce2')
+        
         # try to validate the adapter
         errors = adapter.validate()      
         assert len(errors) == 0, "Had errors:" + str(errors)          
@@ -181,7 +185,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
             {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'Description'}))
-        adapter.setDependencyMap(({'adapter_name': 'Salesforce', 'sf_field': 'AccountId', 'adapter_id': 'salesforce'},))
+        adapter.setDependencyMap(({'adapter_name': 'salesforce2', 'sf_field': 'AccountId', 'adapter_id': 'salesforce2'},))
         
         # test the values on the fields
         self.assertEquals('Salesforce Action Adapter',adapter.Title())
@@ -196,7 +200,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
             self.failUnless(wanted in formToSalesforceMapperValues,
                             "%s missing from %s" % (wanted, formToSalesforceMapperValues))
         adapterToSalesforceFieldValues = adapter.getDependencyMap()[0].values()
-        for wanted in ('salesforce', 'AccountId', 'Salesforce'):
+        for wanted in ('salesforce2', 'AccountId', 'salesforce2'):
             self.failUnless(wanted in adapterToSalesforceFieldValues,
                             "%s missing from %s" % (wanted, adapterToSalesforceFieldValues))
     

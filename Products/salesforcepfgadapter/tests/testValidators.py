@@ -23,31 +23,37 @@ class TestCircularAdapters(base.SalesforcePFGAdapterTestCase):
         """Create a pair of adapters that point to each other.  Should fail."""
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'a')
         a = getattr(self.ff1, 'a')
-        a.setDependencyMap(({'adapter_id': 'b', 'sf_field': '1'},))
-
+        a.setTitle('a')
+        
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'b')
         b = getattr(self.ff1, 'b')
-        b.setDependencyMap(({'adapter_id': 'a', 'sf_field': '1'},))
-
+        b.setTitle('b')
+        
+        a.setDependencyMap(({'adapter_id': 'b', 'adapter_name': 'b', 'sf_field': '1'},))
+        b.setDependencyMap(({'adapter_id': 'a', 'adapter_name': 'a', 'sf_field': '1'},))
+        
         self.failIf(self.validator(({'adapter_id':'a', 'sf_field': '1'},), **{'instance':b})==True)
-
-
+    
     def testThreeWayCircle(self):
         """Create a trio of adapters that point to each other.  Should fail."""
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'a')
         a = getattr(self.ff1, 'a')
-        a.setDependencyMap(({'adapter_id': 'b', 'sf_field': '1'},))
-
+        a.setTitle('a')
+        
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'b')
         b = getattr(self.ff1, 'b')
-        b.setDependencyMap(({'adapter_id': 'c', 'sf_field': '1'},))
-
+        b.setTitle('b')
+        
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'c')
         c = getattr(self.ff1, 'c')
-        c.setDependencyMap(({'adapter_id': 'a', 'sf_field': '1'},))
-
+        c.setTitle('c')
+        
+        c.setDependencyMap(({'adapter_id': 'a', 'adapter_name': 'a', 'sf_field': '1'},))
+        a.setDependencyMap(({'adapter_id': 'b', 'adapter_name': 'b', 'sf_field': '1'},))
+        b.setDependencyMap(({'adapter_id': 'c', 'adapter_name': 'c', 'sf_field': '1'},))
+        
         self.failIf(self.validator(({'adapter_id':'a', 'sf_field': '1'},), **{'instance':c})==True)
-
+    
     def testThreeWayLine(self):
         """Create a trio of adapters that form a line.  Should validate."""
 
@@ -56,11 +62,11 @@ class TestCircularAdapters(base.SalesforcePFGAdapterTestCase):
 
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'b')
         b = getattr(self.ff1, 'b')
-        b.setDependencyMap(({'adapter_id': 'c', 'sf_field': '1'},))
+        b.setDependencyMap(({'adapter_id': 'c', 'adapter_name': 'c', 'sf_field': '1'},))
 
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'c')
         c = getattr(self.ff1, 'c')
-        c.setDependencyMap(({'adapter_id': 'a', 'sf_field': '1'},))
+        c.setDependencyMap(({'adapter_id': 'a', 'adapter_name': 'a', 'sf_field': '1'},))
 
         self.failUnless(self.validator(({'adapter_id':'a', 'sf_field': '1'},), **{'instance':c})==True)
 

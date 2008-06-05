@@ -77,6 +77,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         
         # set up dependencies
         self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
+                                                    'adapter_name': 'Salesforce Account Action Adapter',
                                                     'sf_field':'AccountId'},))
         request = base.FakeRequest(topic="testChainedDependenciesInsertCorrectly",
                               replyto = 'testChainedDependenciesInsertCorrectly@plone.org',
@@ -136,6 +137,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         
         # set up dependencies
         self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
+                                                    'adapter_name':'Salesforce Account Action Adapter',
                                                     'sf_field':'AccountId'},))
         request = base.FakeRequest(topic="testChainedRespectDisabledFinalAdapters",
                               replyto = 'testChainedRespectDisabledFinalAdapters@plone.org',
@@ -195,6 +197,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         
         # set up dependencies
         self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
+                                                    'adapter_name': 'Salesforce Account Action Adapter',
                                                     'sf_field':'AccountId'},))
         request = base.FakeRequest(topic="testChainedRespectNonexecutableFinalAdapters",
                               replyto = 'testChainedRespectNonexecutableFinalAdapters@plone.org',
@@ -233,6 +236,11 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         # make sure the subject field exists
         self.failUnless('Salesforce Adapter #2' in adapter_titles_for_mapping)
         
+        # map our soon to be retitled item
+        fm = self.ff1.salesforce1.getDependencyMap()
+        fm[0]['sf_field'] = 'some-bogus-field'
+        self.ff1.salesforce1.setDependencyMap(fm)
+        
         # rename the subject field
         self.ff1.salesforce2.setTitle('Renamed Salesforce Adapter #2')
         
@@ -240,10 +248,10 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         fm = self.ff1.salesforce1.getDependencyMap()
         self.ff1.salesforce1.setDependencyMap(fm)
         
-        regeneratedAdapterRowFields = self.ff1.salesforce1.getLocalSFAdapters()
-        regenerated_adapter_titles_for_mapping = [mapping.initialData['adapter_name'] for mapping in regeneratedAdapterRowFields]
+        regeneratedAdapterRowFields = self.ff1.salesforce1.getDependencyMap()
+        regenerated_adapter_titles_for_mapping = [mapping['adapter_name'] for mapping in regeneratedAdapterRowFields]
         
-        # make sure the subject field exists
+        # make sure the renamed item does exists, while the old title does not
         self.failIf('Salesforce Adapter #2' in regenerated_adapter_titles_for_mapping)
         self.failUnless('Renamed Salesforce Adapter #2' in regenerated_adapter_titles_for_mapping)
     
@@ -263,6 +271,11 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.failUnless('Salesforce Adapter #2' in adapter_titles_for_mapping)
         self.failUnless('Salesforce Adapter #3' in adapter_titles_for_mapping)
         
+        # map our soon to be deleted item
+        fm = self.ff1.salesforce1.getDependencyMap()
+        fm[0]['sf_field'] = 'some-bogus-field'
+        self.ff1.salesforce1.setDependencyMap(fm)
+        
         # remove adapter #3 from contention
         self.ff1.manage_delObjects(ids=['salesforce2'])
         
@@ -270,10 +283,10 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         fm = self.ff1.salesforce1.getDependencyMap()
         self.ff1.salesforce1.setDependencyMap(fm)
         
-        regeneratedAdapterRowFields = self.ff1.salesforce1.getLocalSFAdapters()
-        regenerated_adapter_titles_for_mapping = [mapping.initialData['adapter_name'] for mapping in regeneratedAdapterRowFields]
+        regeneratedAdapterRowFields = self.ff1.salesforce1.getDependencyMap()
+        regenerated_adapter_titles_for_mapping = [mapping['adapter_name'] for mapping in regeneratedAdapterRowFields]
         
-        # make sure the subject field exists
+        # make sure the removed field no longer exists
         self.failIf('Salesforce Adapter #2' in regenerated_adapter_titles_for_mapping)
     
 
