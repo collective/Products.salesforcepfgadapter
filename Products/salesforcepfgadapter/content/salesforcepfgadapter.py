@@ -217,7 +217,13 @@ class SalesforcePFGAdapter(FormActionAdapter):
             formFieldPath = field.getPhysicalPath()
             formFieldValue = REQUEST.form.get(field.getFieldFormName(),'')
             if field.meta_type == 'FormDateField':
-                formFieldValue = DateTime(formFieldValue + ' GMT+0').HTML4()
+                if formFieldValue:
+                    formFieldValue = DateTime(formFieldValue + ' GMT+0').HTML4()
+                else:
+                    # we want to throw this value away rather than pass along 
+                    # to salesforce, which would ultimately raise a SoapFaultError 
+                    # due to invalid xsd:dateTime formatting
+                    continue
             elif field.isFileField():
                 file = formFieldValue
                 if file and isinstance(file, FileUpload) and file.filename != '':
@@ -227,7 +233,6 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     mimetype, enc = guess_content_type(filename, data, None)
                     from base64 import encodestring
                     formFieldValue = encodestring(data)
-                    
             
             salesforceFieldName = self._getSFFieldForFormField(formFieldPath, formPath)
             if not salesforceFieldName:
