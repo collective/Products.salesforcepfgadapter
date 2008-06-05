@@ -20,3 +20,8 @@ class SalesforcePFGAdapterTestCase(PloneTestCase.PloneTestCase):
     provide specific set-up and tear-down operations, or provide convenience
     methods.
     """
+
+class FakeRequest(dict):
+
+    def __init__(self, **kwargs):
+        self.form = kwargs

@@ -11,11 +11,6 @@ from Products.CMFCore.utils import getToolByName
 
 from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
-class FakeRequest(dict):
-    
-    def __init__(self, **kwargs):
-        self.form = kwargs
-
 class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
     """ test adapters that create separate, related objects """
     
@@ -84,7 +79,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         # set up dependencies
         self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
                                                     'sf_field':'AccountId'},))
-        request = FakeRequest(topic="testChainedDependenciesInsertCorrectly",
+        request = base.FakeRequest(topic="testChainedDependenciesInsertCorrectly",
                               replyto = 'testChainedDependenciesInsertCorrectly@plone.org',
                               comments='testChainedDependenciesInsertCorrectly')
         # call onSuccess on last SF adapter in form
@@ -143,7 +138,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         # set up dependencies
         self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
                                                     'sf_field':'AccountId'},))
-        request = FakeRequest(topic="testChainedRespectDisabledFinalAdapters",
+        request = base.FakeRequest(topic="testChainedRespectDisabledFinalAdapters",
                               replyto = 'testChainedRespectDisabledFinalAdapters@plone.org',
                               comments='testChainedRespectDisabledFinalAdapters')
         fields = self.ff1._getFieldObjects()
@@ -202,7 +197,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         # set up dependencies
         self.ff1.contact_adapter.setDependencyMap(({'adapter_id': 'account_adapter',
                                                     'sf_field':'AccountId'},))
-        request = FakeRequest(topic="testChainedRespectNonexecutableFinalAdapters",
+        request = base.FakeRequest(topic="testChainedRespectNonexecutableFinalAdapters",
                               replyto = 'testChainedRespectNonexecutableFinalAdapters@plone.org',
                               comments='testChainedRespectNonexecutableFinalAdapters')
         fields = self.ff1._getFieldObjects()

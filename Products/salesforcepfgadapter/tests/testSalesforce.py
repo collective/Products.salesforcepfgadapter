@@ -1,30 +1,23 @@
 # Integration tests specific to Salesforce adapter
 #
 
-import os, sys, email
+import os, sys
 
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
 from zope.interface import providedBy
-from Products.PloneFormGen.interfaces import IPloneFormGenField
-from Products.PloneFormGen.tests.testMailer import TestFunctions
-
-from Products.salesforcepfgadapter.tests import base
-
 from Products.CMFCore.utils import getToolByName
 
 from Products.Archetypes.public import DisplayList
 
+from Products.PloneFormGen.interfaces import IPloneFormGenField
+
 from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
+from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.config import REQUIRED_MARKER
 from Products.salesforcepfgadapter.config import SF_ADAPTER_TYPES
-
-class FakeRequest(dict):
-    
-    def __init__(self, **kwargs):
-        self.form = kwargs
 
 class TestProductInstallation(base.SalesforcePFGAdapterTestCase):
     """ ensure that our product installs correctly """
@@ -370,37 +363,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
             intended for fix with the 1.0alpha2 release.")
         self.failUnless('Renamed Subject' in regenerated_static_titles_for_mapping)
     
-    def testDateFieldConvertedToSalesforceFormat(self):
-        """ Prove that DateField values get converted to the format
-            expected by Salesforce (mm/dd/yyyy).
-        """
-        self.ff1.invokeFactory('FormDateField', 'date')
-        self.ff1.date.setTitle('date')
-        
-        self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
-        self.ff1.setActionAdapter( ('salesforce',) )
-        sf = self.ff1.salesforce
-        
-        fieldmap = sf.getFieldMap()
-        fieldmap[-1]['sf_field'] = 'date'
-        sf.setFieldMap(fieldmap)
-        
-        from DateTime import DateTime
-        now = DateTime()
-        now_plone = now.strftime('%m-%d-%Y %H:%M')
-        
-        request = FakeRequest(topic = 'test subject', replyto='test@test.org',
-                              date = now_plone)
-        from Products.Archetypes.interfaces.field import IField
-        fields = [fo for fo in self.ff1._getFieldObjects() if not IField.isImplementedBy(fo)]
-        sObject = self.ff1.salesforce._buildSObjectFromForm(fields, REQUEST=request)
-        
-        from time import strptime
-        try:
-            res = strptime(sObject['date'], '%Y-%m-%dT%H:%M:%SZ')
-        except ValueError:
-            self.fail("Doesn't look like the date was converted to Salesforce format properly.")
-    
     def testImplementIMultiPageSchema(self):
         try:
             from Products.Archetypes.interfaces import IMultiPageSchema
@@ -441,7 +403,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
             
         # build the request and submit the form
         fields = self.ff1._getFieldObjects()
-        request = FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
+        request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
                               comments='PloneTestCase')            # mapped to LastName (see above)
         
         self.ff1.contact_adapter.onSuccess(fields, request)
@@ -482,7 +444,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         
         # build the request and submit the form for both adapters
         fields = self.ff1._getFieldObjects()
-        request = FakeRequest(replyto = 'plonetestcase1ToN@plone.org', # mapped to Email (see above) 
+        request = base.FakeRequest(replyto = 'plonetestcase1ToN@plone.org', # mapped to Email (see above) 
                               comments='PloneTestCase1ToN')            # mapped to LastName (see above)
         
         
@@ -566,7 +528,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         
         # build the request and submit the form for both adapters
         fields = self.ff1._getFieldObjects()
-        request = FakeRequest(replyto = 'plonetestcasefieldsetfields@plone.org', # mapped to Email (see above) 
+        request = base.FakeRequest(replyto = 'plonetestcasefieldsetfields@plone.org', # mapped to Email (see above) 
                               comments='PloneTestCaseFieldsetFields',            # mapped to LastName (see above)
                               subformfield='PloneTestCaseFieldsetSubField',)     # mapped to FirstName (see above)
         
@@ -641,7 +603,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         
         # build the request and submit the form for both adapters
         fields = self.ff1._getFieldObjects()
-        request = FakeRequest(replyto = contact_create_res[0]['id'], # mapped to ParentId (see above) 
+        request = base.FakeRequest(replyto = contact_create_res[0]['id'], # mapped to ParentId (see above) 
                               comments='test.bin',                   # mapped to Name (see above)
                               filefield_file=_createBinaryFile())     # mapped to FirstName (see above)
         

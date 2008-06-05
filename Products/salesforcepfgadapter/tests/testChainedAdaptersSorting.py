@@ -13,11 +13,6 @@ from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
 from Products.salesforcepfgadapter.validators import CircularChainException
 
-class FakeRequest(dict):
-    
-    def __init__(self, **kwargs):
-        self.form = kwargs
-
 class TestChainedAdaptersSorting(base.SalesforcePFGAdapterTestCase):
     """ test order of adapters' processing so that dependencies are taken care of"""
     
