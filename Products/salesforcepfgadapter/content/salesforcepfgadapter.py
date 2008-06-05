@@ -264,7 +264,41 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 
         self.fieldMap = tuple(cleanMapping)
     
-    security.declareProtected(ModifyPortalContent, 'setSFObjectType')    
+    security.declareProtected(ModifyPortalContent, 'setDependencyMap')
+    def setDependencyMap(self, currentDependencyMap):
+        """Accept a possible dependencyMap value ala the following:
+        
+            (
+                  {'adapter_id': 'replyto', 'adapter_name': 'Your E-Mail Address', 'sf_field': 'Email'}, 
+                  {'adapter_id': 'topic', 'adapter_name': 'Subject', 'sf_field': 'FirstName'},
+                  {'adapter_id': 'fieldset,comments', 'adapter_name': 'Comments', 'sf_field': ''}
+            )
+            
+           and iterate through each potential mapping to make certain that
+           an adapter from the form still exists.  This is how
+           we purge ineligible adapter mappings.
+           
+           BBB - when we drop 2.5.x support after the 1.5 release cycle this should be 
+           reimplemented in an event-driven nature.  This current implementation and 
+           the setFieldMap implementation are insane.  Furthermore, an event driven 
+           system could be made to retain the existing field mappings, rather than
+           just clean them out.
+        """
+        logger.debug('calling setDependencyMap()')
+        formFolder = aq_parent(self)
+        eligibleAdapters = [(adapter.getId(),adapter.Title()) for adapter in formFolder.objectValues(SF_ADAPTER_TYPES)]
+        cleanMapping = []
+        
+        for mapping in currentDependencyMap:
+            # check for the presence of keys, which won't exist on content creation
+            # then make sure it's an eligible mapping
+            if mapping.has_key('adapter_id') and mapping.has_key('adapter_name') and \
+              (mapping['adapter_id'], mapping['adapter_name']) in eligibleAdapters:
+                cleanMapping.append(mapping)
+                
+        self.dependencyMap = tuple(cleanMapping)
+    
+    security.declareProtected(ModifyPortalContent, 'setSFObjectType')
     def setSFObjectType(self, newType):
         """When we set the Salesforce object type,
            we also need to reset all the possible fields

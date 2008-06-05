@@ -4,6 +4,9 @@
 
 1.5a2 (svn/unreleased)
 
+- Appropriate cleanup of renamed and/or removed adapters with the Parent Adapter
+  mapping interface.  Similar approach to what exists for field mapping cleanup. [andrew]
+
 - Better handling of empty FormDateField values, which were plagued by errors casting
   to DateTime format and if successful an invalid xsd:dateTime format.  This resolves:
   http://plone.org/products/salesforcepfgadapter/issues/6
