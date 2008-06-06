@@ -5,7 +5,8 @@ version = open(os.path.join("Products", "salesforcepfgadapter", "version.txt")).
 
 setup(name='Products.salesforcepfgadapter',
       version=version,
-      description="",
+      description="PloneFormGen adapter allowing for creation of arbitrary Salesforce.com \
+        records based on data collected from a web form",
       long_description=open(os.path.join("Products", "salesforcepfgadapter", "README.txt")).read(),
       # Get more strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
