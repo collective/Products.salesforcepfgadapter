@@ -552,6 +552,51 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # assert that our newly created Contact was found
         self.assertEqual(request.form['subformfield'], contact_res['records'][0]['FirstName'])
     
+    def testTogglingSObjectTypeClearsOutInvalidFieldMappings(self):
+        # create an action adapters
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'changing_adapter')
+        
+        # configure our changing_adapter to populate the two required fields
+        # upon the Lead sObject: LastName and Company
+        self.ff1.changing_adapter.setSFObjectType('Lead')
+        self.ff1.changing_adapter.setFieldMap((
+            {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Company'},
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
+        
+        # now the user decides to toggle over to the Contact sObject type
+        self.ff1.changing_adapter.setSFObjectType('Contact')
+        
+        # The LastName field is eligible across both types, but Company doesn't
+        # exist for the out of the box Contact sObject.  If the field mapping was
+        # not reconfigured, this would produce a SoapFaultError of INVALID_FIELD 
+        # type. We ensure that this harmful mapping is cleaned out.
+        recipient_sf_fields = [mapping['sf_field'] for mapping in self.ff1.changing_adapter.getFieldMap()]
+        self.failUnless('LastName' in recipient_sf_fields)
+        self.failIf('Company' in recipient_sf_fields)
+    
+    def testTogglingSObjectTypeClearsOutInvalidDependencyMappings(self):
+        # create multiple action adapters
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'changing_adapter')
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'account_adapter')
+        self.ff1.account_adapter.setTitle('Account Adapter')
+        
+        # configure our changing_adapter to have a dependency upon the
+        # account_adapter which will fill the AccountId field upon the Contact
+        self.ff1.changing_adapter.setSFObjectType('Contact')
+        self.ff1.changing_adapter.setDependencyMap(
+            ({'adapter_id': 'account_adapter', 'adapter_name': 'Account Adapter', 'sf_field': 'AccountId'},)
+        )
+        
+        # now the user decides to toggle over to the Contact sObject type
+        self.ff1.changing_adapter.setSFObjectType('Lead')
+        
+        # The LastName field is eligible across both types, but Company doesn't
+        # exist for the out of the box Contact sObject.  If the field mapping was
+        # not reconfigured, this would produce a SoapFaultError of INVALID_FIELD 
+        # type. We ensure that this harmful mapping is cleaned out.
+        recipient_sf_fields = [mapping['sf_field'] for mapping in self.ff1.changing_adapter.getDependencyMap()]
+        self.failIf('AccountId' in recipient_sf_fields)
+    
     def testFileFieldsSavedToSalesforce(self):
         """There may be other use cases, but the Attachment
            type in Salesforce can be associated with any other
