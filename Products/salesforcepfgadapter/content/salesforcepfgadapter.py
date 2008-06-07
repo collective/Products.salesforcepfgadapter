@@ -305,8 +305,31 @@ class SalesforcePFGAdapter(FormActionAdapter):
            for our mapping selection menus.
         """
         logger.debug('Calling setSFObjectType()')
+        
+        def _purgeInvalidMapping(fname):
+            accessor = getattr(self, self.Schema().get(fname).accessor)
+            mutator = getattr(self, self.Schema().get(fname).mutator)
+            
+            eligible_mappings = []
+            for mapping in accessor():
+                if mapping.has_key('sf_field') and not \
+                  self._fieldsForSFObjectType.has_key(mapping['sf_field']):
+                    continue
+                
+                eligible_mappings.append(mapping)
+            
+            mutator(tuple(eligible_mappings))
+        
+        # set the SFObjectType
         self.SFObjectType = newType
+        
+        # clear out the cached field info
         self._fieldsForSFObjectType = self._querySFFieldsForType()
+        
+        # purge mappings and dependencies that are no longer valid
+        for fname in ('fieldMap', 'dependencyMap',):
+            _purgeInvalidMapping(fname)
+        
     
     security.declareProtected(ModifyPortalContent, 'displaySFObjectTypes')
     def displaySFObjectTypes(self):
