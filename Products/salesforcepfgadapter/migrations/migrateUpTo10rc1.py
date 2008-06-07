@@ -29,10 +29,11 @@ class Migration(object):
         
         for result in results:
             obj = result.getObject()
-            sfobject_type = obj.getSFObjectType()
-            # this triggers a call to:
-            # self._querySFFieldsForType()
-            obj.setSFObjectType(sfobject_type)
+            # directly reset the _fieldsForSFObjectType which
+            # going forward should be a key/value consisting
+            # of the field name and the python object
+            # representing the salesforce field
+            obj._fieldsForSFObjectType = obj._querySFFieldsForType()
     
     def migrate(self):
         """Run migration on site object passed to __init__.
