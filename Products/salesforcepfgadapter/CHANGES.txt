@@ -4,6 +4,14 @@
 
 1.5a2 (svn/unreleased)
 
+- The mutator for our SFObjectType field now takes into account the fact that there
+  could exist invalid field mappings and/or dependency mappings for the ultimately 
+  chosen sObject type, which could lead to an Invalid Field exception, should the 
+  mappings not be reconfigured.  This is primarily useful in the case where the user
+  sets up an adapter to create one field type, but later switches to another.  This
+  fixes the following issue:
+  http://plone.org/products/salesforcepfgadapter/issues/7 [andrewb]
+
 - Appropriate cleanup of renamed and/or removed adapters with the Parent Adapter
   mapping interface.  Similar approach to what exists for field mapping cleanup. [andrew]
 
