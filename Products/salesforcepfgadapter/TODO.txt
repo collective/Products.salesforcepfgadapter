@@ -10,4 +10,4 @@ TODO.txt
    SoapFaultError: 'UNKNOWN_EXCEPTION' 'UNKNOWN_EXCEPTION: 
    Server unavailable due to scheduled maintenance'
 - switch setDependencyMap and setFieldMap to an event driven system
-- write test ensuring that invalid existing mappings are cleared out as needed upon a switch to the sObject type
+- display the label as value (key will remain field id), rather than the id of the Salesforce field in the mapping UI.  This is what the Salesforce user is confronted with when they're using the system and may not know what things are called at an API level.
