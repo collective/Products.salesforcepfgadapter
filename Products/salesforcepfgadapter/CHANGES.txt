@@ -2,7 +2,7 @@
 
 - Modification [developer's name]
 
-1.5a2 (svn/unreleased)
+1.5a2
 
 - The mutator for our SFObjectType field now takes into account the fact that there
   could exist invalid field mappings and/or dependency mappings for the ultimately 
