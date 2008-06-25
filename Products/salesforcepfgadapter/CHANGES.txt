@@ -1,8 +1,6 @@
-(svn/unreleased)
-
 - Modification [developer's name]
 
-(svn/unreleased)
+1.5a3
 
 - Better handling of empty FormIntegerField values, which when left blank were filled
   by an empty string that was being passed along within the created object.  In the case
