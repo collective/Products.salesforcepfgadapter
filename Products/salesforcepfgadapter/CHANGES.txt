@@ -4,7 +4,14 @@
 
 (svn/unreleased)
 
-- ?
+- Better handling of empty FormIntegerField values, which when left blank were filled
+  by an empty string that was being passed along within the created object.  In the case
+  of a string-like field, this was fine, but integer fields (i.e. documented as xsd:double and 
+  xsd:int format in the SF WSDL) were another story.  This resolves:
+  http://plone.org/products/salesforcepfgadapter/issues/8
+  Note: If a FormIntegerField was a required field and therefore came through as expected
+  in the request, this was handled properly [andrewb, thanks greenstork for bug report]
+
 
 1.5a2
 
