@@ -670,6 +670,56 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.assertEqual('test.bin', attach_res['records'][0]['Name'])
         self.failUnless(attach_res['records'][0]['BodyLength'] > 0)
     
+    def testEmptyIntegerFieldIsntPushedUpstreamAsInvalidXSDIntDouble(self):
+        """A correctly configured form may ask for an optional "on a scale
+           of 1-5" type question that is left blank.  The build object for
+           creation code shouldn't assume too much about this and turn it
+           into something it's not, like a string.  We use lead creation and
+           and the NumberOfEmployees field as an example below. See:
+           http://plone.org/products/salesforcepfgadapter/issues/8
+        """
+        # create a attachmetn action adapter
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'lead_adapter')
+        
+        # disable mailer adapter
+        self.ff1.setActionAdapter(('lead_adapter',))
+        
+        # configure our contact_adapter to create an Attachment on submission
+        self.ff1.lead_adapter.setTitle('Salesforce Lead Action Adapter')
+        self.ff1.lead_adapter.setSFObjectType('Lead')
+        
+        self.ff1.invokeFactory('FormIntegerField', 'num')
+        self.ff1.num.setTitle('num')
+        
+        # bogus mapping to meet Contact creation reqs,
+        # we optionally ask for the Birtdate in the form
+        self.ff1.lead_adapter.setFieldMap((
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'},
+            {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'Company'},
+            {'field_path': 'num', 'form_field': 'num', 'sf_field': 'NumberOfEmployees'},
+        ))
+        
+        # build the request and submit the form for both adapters
+        fields = self.ff1._getFieldObjects()
+        # assuming there was a FormIntegerField that was not filled out, it would
+        # look like the following in the request:
+        request = base.FakeRequest(comments = 'PloneTestCaseEmptyIntegerField', 
+                                   topic = 'PloneTestCaseEmptyIntegerFieldCompany')
+        
+        # call onSuccess
+        self.ff1.lead_adapter.onSuccess(fields, request)  
+        
+        # query for our attachment
+        lead_res = self.salesforce.query(['Id','NumberOfEmployees'],
+                                          'Lead',
+                                          "LastName='PloneTestCaseEmptyIntegerField'")
+
+        # in case we fail, stock up our to delete list for tear down
+        self._todelete.append(lead_res['records'][0]['Id'])
+
+        # make our assertions
+        self.failIf(lead_res['records'][0]['NumberOfEmployees'])
+
 
 
 def test_suite():

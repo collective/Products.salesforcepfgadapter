@@ -133,6 +133,7 @@ class TestSalesforceFormDateFieldInteraction(base.SalesforcePFGAdapterTestCase):
         self.failIf(contact_res['records'][0]['Birthdate'])
     
 
+    
 
 def test_suite():
     from unittest import TestSuite, makeSuite
