@@ -215,7 +215,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
         sObject = dict(type=self.SFObjectType)
         for field in fields:
             formFieldPath = field.getPhysicalPath()
-            formFieldValue = REQUEST.form.get(field.getFieldFormName(),'')
+            formFieldValue = REQUEST.form.get(field.getFieldFormName())
             if field.meta_type == 'FormDateField':
                 if formFieldValue:
                     formFieldValue = DateTime(formFieldValue + ' GMT+0').HTML4()
@@ -235,8 +235,14 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     formFieldValue = encodestring(data)
             
             salesforceFieldName = self._getSFFieldForFormField(formFieldPath, formPath)
-            if not salesforceFieldName:
+            if not salesforceFieldName or formFieldValue is None:
+                # we either haven't found a mapping or the
+                # the form field was left blank and we therefore
+                # don't care about passing along that value, since
+                # the Salesforce object field may have it's own ideas
+                # about data types and or default values
                 continue
+            
             sObject[salesforceFieldName] = formFieldValue
         return sObject
     
