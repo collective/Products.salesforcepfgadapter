@@ -170,7 +170,7 @@ See Known Problems section of README.txt within PloneFormGen. In addition:
 
 - Beatbox, the underlying Python wrapper library to the Salesforce.com API does not raise a custom exception in the scenario of the API being unavailable due to scheduled maintenance as is evident within the following response: SoapFaultError: 'UNKNOWN_EXCEPTION' 'UNKNOWN_EXCEPTION: Server unavailable due to scheduled maintenance'
 
-This is left unfixed in all branches <=1.5.x of the Salesforce PFG Adapter, due to the modifications that would be required to adequately handle the case with technologies lower in the stack, such as Salesforce Base Connector and beatboxhis will be addressed in a future release.
+This is left unfixed in all branches <=1.5.x of the Salesforce PFG Adapter, due to the modifications that would be required to adequately handle the case with technologies lower in the stack, such as Salesforce Base Connector and beatbox. This will be addressed in a future release.
 
 
 Credits
