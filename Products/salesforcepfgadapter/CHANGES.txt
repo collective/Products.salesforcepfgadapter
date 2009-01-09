@@ -1,8 +1,8 @@
 - Modification [developer's name]
 
-(svn/unreleased)
+1.5 (svn/unreleased)
 
-- ?
+- Stop using trademarked Salesforce.com icon [davisagli]
 
 1.5a3
 
@@ -26,7 +26,7 @@
   http://plone.org/products/salesforcepfgadapter/issues/7 [andrewb]
 
 - Appropriate cleanup of renamed and/or removed adapters with the Parent Adapter
-  mapping interface.  Similar approach to what exists for field mapping cleanup. [andrew]
+  mapping interface.  Similar approach to what exists for field mapping cleanup. [andrewb]
 
 - Better handling of empty FormDateField values, which were plagued by errors casting
   to DateTime format and if successful an invalid xsd:dateTime format.  This resolves:
