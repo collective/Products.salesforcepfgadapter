@@ -37,3 +37,18 @@ As a manager, we should be able to happily see our adapter configurations::
     ...Contact...
     ...LastName (required)...'
 
+Let's publish the form in question and logout so we can take another look 
+at things::
+    
+    >>> self.portal.portal_workflow.doActionFor(self.portal.testform, 'publish')
+
+Now our sophisticated anonymous user knows to navigate to the folder listing
+view and then to the Contact Adapter::
+
+    >>> anonbrowser = Browser()
+    >>> anonbrowser.open("http://nohost/plone/testform/folder_listing")
+    >>> anonbrowser.getLink('Contact Adapter').click()
+    >>> '<span class="" id="parent-fieldname-SFObjectType">\n            Contact\n        </span>' not in anonbrowser.contents
+    True
+
+
