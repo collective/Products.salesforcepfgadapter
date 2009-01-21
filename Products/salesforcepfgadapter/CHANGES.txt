@@ -2,6 +2,13 @@
 
 1.5 (svn/unreleased)
 
+- Added read_permission protection to how Salesforce Adapters have been 
+  configured.  The title is viewable by all, but the SFObjectType, fieldMap,
+  and dependencyMap fields are now only visible to those with the 
+  ModifyPortalContent permission.  Now 'base_view' respects this when 
+  regurgitating the values on any give adapter object
+  [andrewb]
+
 - Stop using trademarked Salesforce.com icon [davisagli]
 
 1.5a3
