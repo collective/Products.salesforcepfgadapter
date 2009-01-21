@@ -1,0 +1,39 @@
+=====================================
+ Salesforce PFG Adapter Edit/View
+=====================================
+
+Get our test browser and get some permissions in place::
+
+    >>> from Products.Five.testbrowser import Browser
+    >>> browser = Browser()
+    >>> portal_url = 'http://nohost/plone'
+    >>> self.app.acl_users.userFolderAddUser('root', 'secret', ['Manager'], [])
+    >>> self.app.acl_users.userFolderAddUser('member', 'secret', ['Member'], [])
+    >>> browser.addHeader('Authorization', 'Basic root:secret')
+
+Add a new form folder to contain our Salesforce Adapter::
+
+    >>> self.setRoles(['Manager'])
+    >>> self.portal.invokeFactory('FormFolder', 'testform')
+    'testform'
+
+Let's now add a Salesforce Adapter and populate a few values on our adapter::
+    
+    >>> browser.open("%s/testform/view" % portal_url)
+    >>> browser.getLink('Salesforce Adapter').click()
+    >>> browser.getControl('Title').value = 'Contact Adapter'
+    >>> browser.getControl('Salesforce Object Type').value = ('Contact',)
+    >>> browser.getControl(name='form_submit').click()
+    >>> browser.open("http://nohost/plone/testform/contact-adapter/edit?fieldset=field%20mapping")
+    >>> browser.getControl(name='fieldMap.sf_field:records').value = ('LastName',)
+    >>> browser.getControl(name='form_submit').click()
+
+As a manager, we should be able to happily see our adapter configurations::
+
+    >>> browser.open("%s/testform/contact-adapter/view" % portal_url)
+    >>> browser.contents
+    '...Contact Adapter...
+    ...Salesforce Object Type...
+    ...Contact...
+    ...LastName (required)...'
+
