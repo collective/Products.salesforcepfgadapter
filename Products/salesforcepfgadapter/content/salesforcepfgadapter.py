@@ -68,6 +68,7 @@ schema = FormAdapterSchema.copy() + Schema((
     StringField('SFObjectType',
         searchable=0,
         required=1,
+        read_permission=ModifyPortalContent,
         default=u'Contact',
         mutator='setSFObjectType',
         widget=SelectionWidget(
@@ -80,6 +81,7 @@ schema = FormAdapterSchema.copy() + Schema((
     DataGridField('fieldMap',
          searchable=0,
          required=1,
+         read_permission=ModifyPortalContent,
          schemata='field mapping',
          columns=('field_path', 'form_field', 'sf_field'),
          fixed_rows = "generateFormFieldRows",
@@ -105,6 +107,7 @@ schema = FormAdapterSchema.copy() + Schema((
     DataGridField('dependencyMap',
          searchable=0,
          required=0,
+         read_permission=ModifyPortalContent,
          schemata='field mapping',
          columns=('adapter_name', 'adapter_id', 'sf_field'),
          fixed_rows = "getLocalSFAdapters",
