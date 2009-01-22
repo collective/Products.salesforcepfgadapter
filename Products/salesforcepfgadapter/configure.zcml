@@ -11,9 +11,10 @@
 
   <gs:registerProfile
       name="default"
-      title="Salesforce PFG Adapter Profile"
+      title="SalesforcePFGAdapter"
       directory="profiles/default"
-      description="Incomplete. Do not use for product installation."
+      description="Adds a custom adapter for writing PloneFormGen data to 
+                   Salesforce.com"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       for="Products.CMFPlone.interfaces.IPloneSiteRoot"
       />
