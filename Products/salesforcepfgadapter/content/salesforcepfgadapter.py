@@ -14,7 +14,7 @@ import logging
 # Zope imports
 from AccessControl import ClassSecurityInfo
 from Acquisition import aq_parent
-from zope.interface import classImplements, providedBy
+from zope.interface import classImplements
 from DateTime import DateTime
 from ZPublisher.HTTPRequest import FileUpload
 try:
@@ -47,7 +47,6 @@ from Products.DataGridField.DataGridField import FixedRow
 from Products.PloneFormGen.interfaces import IPloneFormGenField
 
 # PloneFormGen imports
-from Products.PloneFormGen import HAS_PLONE30
 from Products.PloneFormGen.content.actionAdapter import \
     FormActionAdapter, FormAdapterSchema
 
