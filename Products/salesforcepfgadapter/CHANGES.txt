@@ -1,6 +1,4 @@
-- Modification [developer's name]
-
-1.5 (svn/unreleased)
+1.5rc1
 
 - Added information about known issue #30 within dependency DataGridField.
   http://plone.org/products/datagridfield/issues/30
