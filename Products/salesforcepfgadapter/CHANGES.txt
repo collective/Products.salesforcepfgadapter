@@ -2,6 +2,10 @@
 
 1.5 (svn/unreleased)
 
+- Added information about known issue #30 within dependency DataGridField.
+  http://plone.org/products/datagridfield/issues/30
+  [andrewb]
+
 - Added read_permission protection to how Salesforce Adapters have been 
   configured.  The title is viewable by all, but the SFObjectType, fieldMap,
   and dependencyMap fields are now only visible to those with the 
