@@ -172,6 +172,14 @@ See Known Problems section of README.txt within PloneFormGen. In addition:
 
 This is left unfixed in all branches <=1.5.x of the Salesforce PFG Adapter, due to the modifications that would be required to adequately handle the case with technologies lower in the stack, such as Salesforce Base Connector and beatbox. This will be addressed in a future release.
 
+Another known problem arises when using versions of DataGridField (DGF), a 
+dependency to this product, < 1.6 final. DGF shipped with two versions
+of a css stylesheet called datagridwidget.css (one a .dtml file and the other 
+a .css file).  If the incorrect version was active, the PloneFormGen to 
+Salesforce "field mapping" user interface appeared as though additional fields
+were addable directly from the Salesforce Adapter editing screen.  In 
+addition, the hidden column containing the relative path to the field appeared
+to the user.  This is easily resolved by upgrading to DGF versions >= 1.6.
 
 Credits
 =======
