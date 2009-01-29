@@ -1,3 +1,8 @@
+1.5rc2 (svn/unreleased)
+
+- Modification
+  [name of developer]
+
 1.5rc1
 
 - Added information about known issue #30 within dependency DataGridField.
