@@ -1,3 +1,8 @@
+1.6 (svn/unreleased)
+
+- Description of change
+  [name of developer]
+
 1.5  - released February 18, 2009
 
 - Clean-up of overly long lines (e.g. > 80 chars) in README.txt 
