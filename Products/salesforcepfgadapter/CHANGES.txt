@@ -1,7 +1,7 @@
-1.5rc2 (svn/unreleased)
+1.5  - released February 18, 2009
 
-- Modification
-  [name of developer]
+- Clean-up of overly long lines (e.g. > 80 chars) in README.txt 
+  [andrewb]
 
 1.5rc1
 
