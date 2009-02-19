@@ -1,25 +1,23 @@
 Salesforce PFG Adapter (PloneFormGen Add-On)
 ============================================
-Product home is
-http://plone.org/products/salesforcepfgadapter.
-A `documentation area`_ and `issue
-tracker`_ are available at
-the linked locations.
+Product home is http://plone.org/products/salesforcepfgadapter. A 
+`documentation area`_ and `issue tracker`_ are available at the linked 
+locations.
 
 .. _documentation area: http://plone.org/documentation/manual/integrating-plone-with-salesforce.com
 .. _issue tracker: http://plone.org/products/salesforcepfgadapter/issues
 
-A Google Group, called `Plone Salesforce Integration`_ 
-exists with the sole aim of discussing and developing tools to make Plone integrate well
-with Salesforce.com.  If you have a question, joining this group and posting to the 
+A Google Group, called `Plone Salesforce Integration`_ exists with the sole 
+aim of discussing and developing tools to make Plone integrate well with
+Salesforce.com.  If you have a question, joining this group and posting to the 
 mailing list is the likely best way to get support.
 
 .. _Plone Salesforce Integration: http://groups.google.com/group/plonesf
 
-Failing that, please try using the Plone users' mailing list or the #plone irc channel for
-support requests. If you are unable to get your questions answered there, or are 
-interested in helping develop the product, see the credits below for 
-individuals you might contact.
+Failing that, please try using the Plone users' mailing list or the #plone irc 
+channel for support requests. If you are unable to get your questions answered 
+there, or are interested in helping develop the product, see the credits below 
+for individuals you might contact.
 
 Overview
 ========
@@ -227,7 +225,8 @@ Salesforce Base Connector
 Simon Fell for providing the beatbox Python wrapper to the Salesforce.com API
  
 Salesforce.com Foundation and Enfold Systems for their gift and work on 
-beatbox (see: http://gokubi.com/archives/onenorthwest-gets-grant-from-salesforcecom-to-integrate-with-plone)
+beatbox (see: 
+http://gokubi.com/archives/onenorthwest-gets-grant-from-salesforcecom-to-integrate-with-plone)
 
 See the CHANGES.txt file for the growing list of people who helped
 with particular features or bugs.
@@ -239,5 +238,4 @@ License
 Distributed under the GPL.
 
 See LICENSE.txt and LICENSE.GPL for details.
-
 
