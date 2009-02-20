@@ -81,20 +81,6 @@ def install(self):
         setup_tool.setImportContext(old_context)
     print >> out, "Installed types and added to portal_factory via portal_setup"
     
-    
-    # add the SalesforcePFGAdapter type as an addable type to FormField
-    # This is not desirable to do with GS because we don't want to maintain a list of 
-    # FormFolder's allowed_content_types and we don't want to overwrite existing settings
-    print >> out, "Adding SalesforcePFGAdapter to Form Field allowed_content_types"
-    types_tool = getToolByName(self, 'portal_types')
-    if 'FormFolder' in types_tool.objectIds():
-        allowedTypes = types_tool.FormFolder.allowed_content_types
-        
-        if 'SalesforcePFGAdapter' not in allowedTypes:
-            allowedTypes = list(allowedTypes)
-            allowedTypes.append('SalesforcePFGAdapter')
-            types_tool.FormFolder.allowed_content_types = allowedTypes
-        
     propsTool = getToolByName(self, 'portal_properties')
     siteProperties = getattr(propsTool, 'site_properties')
     navtreeProperties = getattr(propsTool, 'navtree_properties')
