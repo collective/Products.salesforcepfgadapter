@@ -1,7 +1,14 @@
 1.6 (svn/unreleased)
 
-- Description of change
-  [name of developer]
+- Move substantial portions of package installation to GenericSetup.
+  [andrewb]
+
+- No longer supporting Plone 2.5, pull out all the complex workarounds 
+  associated with support older version.
+  [andrewb]
+
+- Added metadata.xml to GenericSetup profile.
+  [andrewb]
 
 1.5  - released February 18, 2009
 
