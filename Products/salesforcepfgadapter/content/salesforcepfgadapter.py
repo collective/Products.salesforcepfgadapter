@@ -549,8 +549,5 @@ class SalesforcePFGAdapter(FormActionAdapter):
 
 registerATCT(SalesforcePFGAdapter, PROJECTNAME)
 
-try:
-    from Products.Archetypes.interfaces import IMultiPageSchema
-    classImplements(SalesforcePFGAdapter, IMultiPageSchema)
-except ImportError:
-    pass
+from Products.Archetypes.interfaces import IMultiPageSchema
+classImplements(SalesforcePFGAdapter, IMultiPageSchema)

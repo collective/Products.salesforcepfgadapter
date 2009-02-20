@@ -382,22 +382,16 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.failUnless('Renamed Subject' in regenerated_static_titles_for_mapping)
     
     def testImplementIMultiPageSchema(self):
-        try:
-            from Products.Archetypes.interfaces import IMultiPageSchema
-            self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
-            sf = self.ff1.salesforce
-            self.assertTrue(IMultiPageSchema.providedBy(sf))
-        except ImportError:
-            pass
+        from Products.Archetypes.interfaces import IMultiPageSchema
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
+        sf = self.ff1.salesforce
+        self.assertTrue(IMultiPageSchema.providedBy(sf))
     
     def testNoExtraneousSchemata(self):
-        try:
-            from Products.Archetypes.interfaces import IMultiPageSchema
-            self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
-            sfSchema = self.ff1.salesforce.schema
-            self.assertEquals(['default', 'field mapping', 'overrides'], sfSchema.getSchemataNames())
-        except ImportError:
-            pass
+        from Products.Archetypes.interfaces import IMultiPageSchema
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
+        sfSchema = self.ff1.salesforce.schema
+        self.assertEquals(['default', 'field mapping', 'overrides'], sfSchema.getSchemataNames())
     
     def testSalesforceAdapterOnSuccess(self):
         """Ensure that our Salesforce Adapter mapped objects
