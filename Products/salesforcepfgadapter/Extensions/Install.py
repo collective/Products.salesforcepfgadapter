@@ -81,20 +81,6 @@ def install(self):
         setup_tool.setImportContext(old_context)
     print >> out, "Installed types and added to portal_factory via portal_setup"
     
-    propsTool = getToolByName(self, 'portal_properties')
-    siteProperties = getattr(propsTool, 'site_properties')
-    navtreeProperties = getattr(propsTool, 'navtree_properties')
-    
-    # Add the field, fieldset, thanks and adapter types to types excluded from navigation
-    # This is not desirable to do with GS because we don't want to maintain a list of 
-    # the Portal's metaTypesNotToList and we don't want to overwrite existing settings
-    typesNotListed = list(navtreeProperties.getProperty('metaTypesNotToList'))
-    for f in ALLTYPES:
-        if f not in typesNotListed:
-            typesNotListed.append(f)
-    navtreeProperties.manage_changeProperties(metaTypesNotToList = typesNotListed)
-    print >> out, "Added form fields & adapters to metaTypesNotToList"
-    
     # run the 1.0rc1 migration if deemed necessary
     if needs10rc1Migration:
         portal_url = getToolByName(self, 'portal_url')

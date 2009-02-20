@@ -54,17 +54,23 @@ class TestProductInstallation(base.SalesforcePFGAdapterTestCase):
     
     def testTypesNotSearchedListNotPurged(self):
         types_not_searched = self.properties.site_properties.getProperty('types_not_searched')
-        for t in self.metaTypes:
-            self.failUnless(len(types_not_searched) > 1,
-                "There are plenty of stock types that are excluded from "
-                "search, but we presumably just have our own due to a purge "
-                "on installation.")
+        self.failUnless(len(types_not_searched) > 1,
+            "There are plenty of stock types that are excluded from "
+            "search, but we presumably just have our own due to a purge "
+            "on installation.")
     
-    def testTypesNotListed(self):
+    def testMetaTypesNotListed(self):
         metaTypesNotToList  = self.properties.navtree_properties.getProperty('metaTypesNotToList')
         for t in self.metaTypes:
             self.failUnless(t in metaTypesNotToList,
                 "Type %s is will show up in the nav and shouldn't" % t)
+    
+    def testMetaTypesNotListedNotPurged(self):
+        metaTypesNotToList = self.properties.navtree_properties.getProperty('metaTypesNotToList')
+        self.failUnless(len(metaTypesNotToList) > 1,
+            "There are plenty of stock types that are excluded from "
+            "search, but we presumably just have our own due to a purge "
+            "on installation.")
     
     def testMetaTypesAllowedInFormFolder(self):
         allowedTypes = self.types.FormFolder.allowed_content_types
