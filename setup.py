@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = open(os.path.join("Products", "salesforcepfgadapter", "version.txt")).read().strip()
+version = '1.6'
 
 setup(name='Products.salesforcepfgadapter',
       version=version,
