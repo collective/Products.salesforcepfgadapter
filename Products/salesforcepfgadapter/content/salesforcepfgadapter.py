@@ -17,12 +17,7 @@ from Acquisition import aq_parent
 from zope.interface import classImplements
 from DateTime import DateTime
 from ZPublisher.HTTPRequest import FileUpload
-try:
-    # 3.0+
-    from zope.contenttype import guess_content_type
-except ImportError:
-    # 2.5
-    from zope.app.content_types import guess_content_type
+from zope.contenttype import guess_content_type
 
 # CMFCore
 from Products.CMFCore.Expression import getExprContext
