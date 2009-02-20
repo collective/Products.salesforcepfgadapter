@@ -1,5 +1,4 @@
 from Products.salesforcepfgadapter.config import PROJECTNAME
-from Products.salesforcepfgadapter import HAS_PLONE25, HAS_PLONE30
 
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.permissions import ManagePortal
@@ -66,20 +65,12 @@ def install(self):
     needs10rc1Migration = _productNeedsMigrationTo10RC1(portal_qi)
     needs15a1Migration = _productNeedsMigrationTo15a1(portal_qi)
     
-    # We install our product by running a GS profile.  We use the old-style Install.py module 
-    # so that our product works w/ the Quick Installer in Plone 2.5.x
+    # We install our product by running a GS profile.
     print >> out, "Installing salesforcepfgadapter"
     setup_tool = getToolByName(self, 'portal_setup')
-    if HAS_PLONE30:
-        setup_tool.runAllImportStepsFromProfile(
-                "profile-Products.salesforcepfgadapter:default",
-                purge_old=False)
-    else:
-        old_context = setup_tool.getImportContextID()
-        setup_tool.setImportContext('profile-Products.salesforcepfgadapter:default')
-        setup_tool.runAllImportSteps()
-        setup_tool.setImportContext(old_context)
-    print >> out, "Installed types and added to portal_factory via portal_setup"
+    setup_tool.runAllImportStepsFromProfile(
+            "profile-Products.salesforcepfgadapter:default",
+            purge_old=False)
     
     # run the 1.0rc1 migration if deemed necessary
     if needs10rc1Migration:

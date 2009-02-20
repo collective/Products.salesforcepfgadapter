@@ -53,11 +53,7 @@ from Products.PloneFormGen.content.actionAdapter import \
 # Local imports
 from Products.salesforcepfgadapter.config import PROJECTNAME, REQUIRED_MARKER, SF_ADAPTER_TYPES
 from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
-from Products.salesforcepfgadapter import HAS_PLONE25, HAS_PLONE30
 from Products.salesforcepfgadapter import validators
-
-if HAS_PLONE25:
-    import zope.i18n
 
 logger = logging.getLogger("PloneFormGen")
 
@@ -143,9 +139,6 @@ class SalesforcePFGAdapter(FormActionAdapter):
     """
     schema = schema
     security = ClassSecurityInfo()
-    
-    if not HAS_PLONE30:
-        finalizeATCTSchema(schema, folderish=True, moveDiscussion=False)
     
     meta_type = portal_type = 'SalesforcePFGAdapter'
     archetype_name = 'Salesforce Adapter'
