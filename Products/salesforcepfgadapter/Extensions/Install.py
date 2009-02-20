@@ -84,16 +84,6 @@ def install(self):
     propsTool = getToolByName(self, 'portal_properties')
     siteProperties = getattr(propsTool, 'site_properties')
     navtreeProperties = getattr(propsTool, 'navtree_properties')
-
-    # Add the field, fieldset, thanks and adapter types to types_not_searched
-    # This is not desirable to do with GS because we don't want to maintain a list of 
-    # the Portal's types_not_searched and we don't want to overwrite existing settings
-    typesNotSearched = list(siteProperties.getProperty('types_not_searched'))
-    for f in ALLTYPES:
-        if f not in typesNotSearched:
-            typesNotSearched.append(f)
-    siteProperties.manage_changeProperties(types_not_searched = typesNotSearched)
-    print >> out, "Added form fields & adapters to types_not_searched"
     
     # Add the field, fieldset, thanks and adapter types to types excluded from navigation
     # This is not desirable to do with GS because we don't want to maintain a list of 
