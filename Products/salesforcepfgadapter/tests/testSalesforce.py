@@ -51,7 +51,15 @@ class TestProductInstallation(base.SalesforcePFGAdapterTestCase):
         for t in self.metaTypes:
             self.failUnless(t in types_not_searched,
                 "Type %s is searchable and shouldn't be" % t)
-
+    
+    def testTypesNotSearchedListNotPurged(self):
+        types_not_searched = self.properties.site_properties.getProperty('types_not_searched')
+        for t in self.metaTypes:
+            self.failUnless(len(types_not_searched) > 1,
+                "There are plenty of stock types that are excluded from "
+                "search, but we presumably just have our own due to a purge "
+                "on installation.")
+    
     def testTypesNotListed(self):
         metaTypesNotToList  = self.properties.navtree_properties.getProperty('metaTypesNotToList')
         for t in self.metaTypes:
