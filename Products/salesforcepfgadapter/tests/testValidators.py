@@ -12,10 +12,8 @@ if __name__ == '__main__':
 class TestCircularAdapters(base.SalesforcePFGAdapterTestCase):
     
     def afterSetUp(self):
+        super(TestCircularAdapters, self).afterSetUp()
         self.validator = CircularDependencyValidator('validator')
-        self.portal.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
-        self.salesforce = getToolByName(self.portal, "portal_salesforcebaseconnector")
-        self.salesforce.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
 

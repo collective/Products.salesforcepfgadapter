@@ -22,13 +22,11 @@ class Test10rc1ProductMigration(base.SalesforcePFGAdapterTestCase):
     """
     
     def afterSetUp(self):
+        super(Test10rc1ProductMigration, self).afterSetUp()
         self.types   = getToolByName(self.portal, 'portal_types')
         self.catalog = getToolByName(self.portal, 'portal_catalog')
         self.qi      = getToolByName(self.portal, 'portal_quickinstaller')
         
-        self.portal.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
-        self.salesforce = getToolByName(self.portal, "portal_salesforcebaseconnector")
-        self.salesforce.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
         self.migration = Migration_10rc1(self.portal, [])
     
     def testTypeIndexRebuiltViaReinstallationTestsMigrationTo10rc1(self):
@@ -120,12 +118,9 @@ class Test15a1ProductMigration(base.SalesforcePFGAdapterTestCase):
         with thanks to CMFPlone/tests/testMigrations.py for numerous examples.
     """
     def afterSetUp(self):
+        super(Test15a1ProductMigration, self).afterSetUp()
         self.catalog = getToolByName(self.portal, 'portal_catalog')
         self.qi      = getToolByName(self.portal, 'portal_quickinstaller')
-        
-        self.portal.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
-        self.salesforce = getToolByName(self.portal, "portal_salesforcebaseconnector")
-        self.salesforce.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
         self.migration = Migration_15a1(self.portal, [])
     
     def testMigrationTo15a1RequiredForVersions(self):

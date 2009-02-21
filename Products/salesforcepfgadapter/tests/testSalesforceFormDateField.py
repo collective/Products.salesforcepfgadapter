@@ -19,10 +19,7 @@ class TestSalesforceFormDateFieldInteraction(base.SalesforcePFGAdapterTestCase):
     """ test save data adapter """
     
     def afterSetUp(self):        
-        self.portal.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
-        self.salesforce = getToolByName(self.portal, "portal_salesforcebaseconnector")
-        self.salesforce.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
-        self._todelete = list() # keep track of ephemeral test data to delete
+        super(TestSalesforceFormDateFieldInteraction, self).afterSetUp()
         
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')

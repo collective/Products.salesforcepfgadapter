@@ -1,6 +1,9 @@
+import transaction
+
 # Import the base test case classes
 from Testing import ZopeTestCase as ztc
 from Products.CMFPlone.tests import PloneTestCase as ptc
+from Products.PloneTestCase.layer import onsetup
 from Products.CMFCore.utils import getToolByName
 
 from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
@@ -16,21 +19,45 @@ ztc.installProduct('salesforcepfgadapter')
 # are all products available to Zope in the test fixture)
 PRODUCTS = ['salesforcepfgadapter']
 
+@onsetup
+def setup_salesforce_base_connector():
+    """Install, Add, and Configure Salesforce Base Connector
+       on a layer, so that we don't need to repetitively do 
+       this prior to each test case run.
+    """
+    # aware of salesforcebaseconnector
+    ztc.installProduct('salesforcebaseconnector')
+    
+    # get our plone site
+    app = ztc.app()
+    plone = app.plone
+    
+    # setup base connector
+    plone.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
+    toolbox = getToolByName(plone, "portal_salesforcebaseconnector")
+    toolbox.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
+    
+    # commit transaction, close connection to app ZODB
+    transaction.commit()
+    ztc.close(app)
+
 ptc.setupPloneSite(products=PRODUCTS)
+setup_salesforce_base_connector()
 
 class SalesforcePFGAdapterTestCase(ptc.PloneTestCase):
     """Base class for integration tests for the 'salesforcepfgadapter' product. This may
     provide specific set-up and tear-down operations, or provide convenience
     methods.
     """
+    def afterSetUp(self):
+        self.salesforce = self.portal.portal_salesforcebaseconnector
+        self._todelete = list() # keep track of ephemeral test data to delete
+    
 
 class BaseSalesforcePFGAdapterFunctionalTestCase(ptc.FunctionalTestCase):
     """Base class for functional doctests
     """
     def afterSetUp(self):
-        self.portal.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
-        self.salesforce = getToolByName(self.portal, "portal_salesforcebaseconnector")
-        self.salesforce.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
         self._todelete = list() # keep track of ephemeral test data to delete
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
