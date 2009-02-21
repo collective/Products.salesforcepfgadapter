@@ -1,5 +1,10 @@
 1.6 (svn/unreleased)
 
+- Fix for issue #13, whereby hitting the next button while editing a
+  Salesforce Adapter with PloneFormGen 1.5b2 redirected off to the Form 
+  Folder's Quick Edit UI, rather than the field mapping UI as expected.
+  [andrewb]
+
 - Move substantial portions of package installation to GenericSetup.
   [andrewb]
 
