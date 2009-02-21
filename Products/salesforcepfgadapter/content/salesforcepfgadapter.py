@@ -26,8 +26,9 @@ from Products.CMFCore.Expression import getExprContext
 from Products.CMFPlone.utils import safe_hasattr
 from Products.Archetypes.public import StringField, SelectionWidget, \
     DisplayList, Schema, ManagedSchema
+
 from Products.ATContentTypes.content.schemata import finalizeATCTSchema
-from Products.ATContentTypes.content.base import registerATCT
+from Products.ATContentTypes.content.base import registerATCT, ATCTContent
 from Products.CMFCore.permissions import View, ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from Products.validation.config import validation
@@ -544,6 +545,9 @@ class SalesforcePFGAdapter(FormActionAdapter):
             sorted_ = _process(formFolder, id, sorted_)
         
         return sorted_
+    
+    def processForm(self, data=1, metadata=0, REQUEST=None, values=None):
+        ATCTContent.processForm(self, data, metadata, REQUEST, values)
     
 
 
