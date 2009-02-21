@@ -1,6 +1,6 @@
-=====================================
- Salesforce PFG Adapter Edit/View
-=====================================
+============================
+ Salesforce PFG Adapter View
+============================
 
 Get our test browser and get some permissions in place::
 
@@ -23,8 +23,7 @@ Let's now add a Salesforce Adapter and populate a few values on our adapter::
     >>> browser.getLink('Salesforce Adapter').click()
     >>> browser.getControl('Title').value = 'Contact Adapter'
     >>> browser.getControl('Salesforce Object Type').value = ('Contact',)
-    >>> browser.getControl(name='form_submit').click()
-    >>> browser.open("http://nohost/plone/testform/contact-adapter/edit?fieldset=field%20mapping")
+    >>> browser.getControl(name='form_next').click()
     >>> browser.getControl(name='fieldMap.sf_field:records').value = ('LastName',)
     >>> browser.getControl(name='form_submit').click()
 
