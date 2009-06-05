@@ -22,7 +22,7 @@ Let's now add a Salesforce Adapter and populate a few values on our adapter::
     >>> browser.getLink('Salesforce Adapter').click()
     >>> browser.getControl('Title').value = 'Contact Adapter'
     >>> browser.getControl('Salesforce Object Type').value = ('Contact',)
-    >>> browser.getControl(name='form_next').click()
+    >>> browser.getControl(name='form.button.next').click()
 
 Now assuming we've fixed issue #13 in our tracker, hitting next should take
 us directly our field mapping schemata, not back to the quick edit provided by
