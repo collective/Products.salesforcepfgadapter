@@ -408,7 +408,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
         
         for formFieldTitle, formFieldPath in self._getIPloneFormGenFieldsPathTitlePair():
             logger.debug("creating mapper row for %s" % formFieldTitle)
-            fixedRows.append(FixedRow(keyColumn="form_field",
+            fixedRows.append(FixedRow(keyColumn="field_path",
                                       initialData={"form_field" : formFieldTitle, 
                                                    "field_path" : formFieldPath,
                                                    "sf_field" : ""}))

@@ -1,6 +1,11 @@
 1.6 (svn/unreleased)
 
-- Cut out duplicate setup code and unneccsary API calls throughout testing
+- Use the field id instead of title as the key column for the field mapping,
+  so that it's possible to set the mapping programmatically without worrying
+  about the titles.
+  [davisagli]
+
+- Cut out duplicate setup code and unnecessary API calls throughout testing
   with use of onsetup decorator.
   [andrewb]
 
