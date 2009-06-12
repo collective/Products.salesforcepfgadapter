@@ -130,8 +130,8 @@ schema = FormAdapterSchema.copy() + Schema((
         schemata="mode",
         required=True,
         searchable=False,
-        vocabulary=("create","upsert"),
-        default="create",
+        vocabulary=["create","upsert"],
+        # default="create",
         widget=SelectionWidget(
             label=_(u"Do update"),
             description=_(u"Do you want to create new objects or update existing?"),
@@ -142,13 +142,13 @@ schema = FormAdapterSchema.copy() + Schema((
     StringField(
         'primaryKeyField',
         schemata="mode",
-        required=True,
+        required=False,
         searchable=False,
-        vocabulary=("contact_id","email"),
-        default="contact_id",
+        vocabulary='getMappedSFFields',
+        # default="contact_id",
         widget=SelectionWidget(
-            label=_(u"What field should be considered the unique id?"),
-            description=_(u"What? You don't understand what I meant?"),
+            label=_(u"Salesforce primary key field"),
+            description=_(u"Salesforce field to be used to find and existing record"),
          ),
     ),    
     
@@ -601,7 +601,10 @@ class SalesforcePFGAdapter(FormActionAdapter):
     def processForm(self, data=1, metadata=0, REQUEST=None, values=None):
         ATCTContent.processForm(self, data, metadata, REQUEST, values)
     
-
+    security.declareProtected(View, 'getMappedSFFields')
+    def getMappedSFFields(self):
+        return tuple([item['sf_field'] for item in self.fieldMap])
+    
 
 registerATCT(SalesforcePFGAdapter, PROJECTNAME)
 
