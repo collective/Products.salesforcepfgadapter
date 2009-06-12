@@ -24,8 +24,9 @@ from Products.CMFCore.Expression import getExprContext
 
 # Plone imports
 from Products.CMFPlone.utils import safe_hasattr
-from Products.Archetypes.public import StringField, SelectionWidget, \
-    DisplayList, Schema, ManagedSchema
+from Products.Archetypes.public import StringField, StringWidget, \
+    SelectionWidget, BooleanField, BooleanWidget, DisplayList, Schema, \
+    ManagedSchema
 
 from Products.ATContentTypes.content.schemata import finalizeATCTSchema
 from Products.ATContentTypes.content.base import registerATCT, ATCTContent
@@ -123,12 +124,63 @@ schema = FormAdapterSchema.copy() + Schema((
              i18n_domain = "salesforcepfgadapter",
              ),
          validators = ('CircularDependencyValidator',),
-         )
+         ),
+    StringField(
+        'creationMode',
+        schemata="mode",
+        required=True,
+        searchable=False,
+        vocabulary=("create","upsert"),
+        default="create",
+        widget=SelectionWidget(
+            label=_(u"Do update"),
+            description=_(u"Do you want to create new objects or update existing?"),
+            format="radio",
+         ),
+    ),
+    
+    StringField(
+        'primaryKeyField',
+        schemata="mode",
+        required=True,
+        searchable=False,
+        vocabulary=("contact_id","email"),
+        default="contact_id",
+        widget=SelectionWidget(
+            label=_(u"What field should be considered the unique id?"),
+            description=_(u"What? You don't understand what I meant?"),
+         ),
+    ),    
+    
+    BooleanField(
+        'doPrepopulate',
+        schemata="mode",
+        required=False,
+        default=False,
+        widget=BooleanWidget(
+            label=_(u"Prepopulate field values on form load"),
+            description=_(u"You know... prepopulate.")
+        ),
+    ),
+
+    StringField(
+        'primaryKeyFieldDefaultExpression',
+        schemata="mode",
+        required=False,
+        searchable=False,
+        default="",
+        widget=StringWidget(
+            label=_(u"Primary key field default expression"),
+            description=_(u"Placeholder for now. Will be a TALES expression."),
+         ),
+    ),    
+    
 ))
 
 # move 'field mapping' schemata before the inherited overrides schemata
 schema = ManagedSchema(schema.copy().fields())
 schema.moveSchemata('field mapping', -1)
+schema.moveSchemata('mode', -1)
 
 class SalesforcePFGAdapter(FormActionAdapter):
     """ An adapter for PloneFormGen that saves results to Salesforce.
