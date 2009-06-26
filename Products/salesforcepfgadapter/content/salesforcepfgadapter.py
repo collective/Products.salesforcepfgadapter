@@ -12,6 +12,7 @@ __docformat__ = 'plaintext'
 import logging
 
 # Zope imports
+from zope.interface import implements
 from AccessControl import ClassSecurityInfo
 from Acquisition import aq_parent
 from zope.interface import classImplements
@@ -153,7 +154,7 @@ schema = FormAdapterSchema.copy() + Schema((
     ),    
     
     BooleanField(
-        'doPrepopulate',
+        'prepopulateFieldValues',
         schemata="mode",
         required=False,
         default=False,
@@ -185,6 +186,8 @@ schema.moveSchemata('mode', -1)
 class SalesforcePFGAdapter(FormActionAdapter):
     """ An adapter for PloneFormGen that saves results to Salesforce.
     """
+    implements(interfaces.ISalesforcePFGAdapter)
+    
     schema = schema
     security = ClassSecurityInfo()
     

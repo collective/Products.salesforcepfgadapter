@@ -15,6 +15,9 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
     
     def afterSetUp(self):
+        self.test_fieldmap = (dict(field_path= 'replyto',
+            form_field='Your E-Mail Address', sf_field='Email'),)
+        
         super(TestFieldPrepopulationSetting, self).afterSetUp()
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
@@ -37,8 +40,8 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
          - the creation mode is set to update or upsert
          - a primary key field is configured
         """
-        self.sfa.setFieldMap((dict(field_path= 'replyto',
-            form_field='Your E-Mail Address', sf_field='Email')))
+        import pdb; pdb.set_trace( )
+        self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('creation')
         self.sfa.setPrepopulateFieldValues(True)
         notify(ObjectEditedEvent(self.sfa))
@@ -47,8 +50,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
 
     def testPrepopulateSettingSetsFieldDefaults(self):
         self.sfa.setSFObjectType('Contact')
-        self.sfa.setFieldMap((dict(field_path= 'replyto',
-            form_field='Your E-Mail Address', sf_field='Email')))
+        self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
         self.sfa.setPrimaryKeyField('ContactId')
         self.sfa.setPrepopulateFieldValues(True)
@@ -70,8 +72,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
     
     def testPrepopulateSettingDoesntPurgeCustomizedFieldDefaults(self):
         self.ff1.replyto.setFgTDefault('foobar')
-        self.sfa.setFieldMap((dict(field_path= 'replyto',
-            form_field='Your E-Mail Address', sf_field='Email')))
+        self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
         self.sfa.setPrimaryKeyField('ContactId')
         self.sfa.setPrepopulateFieldValues(False)
