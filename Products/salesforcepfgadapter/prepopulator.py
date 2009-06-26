@@ -70,25 +70,18 @@ class FieldValueRetriever(BrowserView):
         return parent
     
     def getFieldPath(self):
-        return self.context.getPhysicalPath()[len(self.form.getPhysicalPath()):]
+        return ','.join(self.context.getPhysicalPath()[len(self.form.getPhysicalPath()):])
 
     def getRelevantSFAdapter(self):
         """
         Returns the SF adapter that is already in use for this request,
         or else looks for one that maps this field
         """
-        data = self.getData()
-        if 'sf_adapter' in data:
-            return data['sf_adapter']
-        
-        pfg = self.getForm()
-        field_path = self.context.getPhysicalPath()[len(pfg.getPhysicalPath()):]
+        pfg = self.form
+        field_path = self.getFieldPath()
         
         # find a Salesforce adapter in this form that maps this field
-        data['sf_adapter'] = None
         for sfa in [o for o in pfg.objectValues() if o.portal_type == 'SalesforcePFGAdapter']:
             field_map = sfa.getFieldMap()
             if field_path in [f['field_path'] for f in field_map]:
-                # now cache the found adapter for the rest of this request
-                data['sf_adapter'] = sfa
                 return sfa

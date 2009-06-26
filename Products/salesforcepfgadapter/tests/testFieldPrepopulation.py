@@ -133,17 +133,19 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
     def testGetRelevantSFAdapter(self):
         retriever = FieldValueRetriever(self.ff1.replyto, self.app.REQUEST)
         sfa = retriever.getRelevantSFAdapter()
-        self.failUnless(sfa is self.sfa)
+        self.failUnless(sfa.aq_base is self.sfa.aq_base)
     
     def testGetRelevantSFAdapterForFieldsetField(self):
         self.ff1.invokeFactory('FieldsetFolder', 'fieldset')
         fieldset = self.ff1.fieldset
         fieldset.invokeFactory('FormStringField', 'foo')
         fieldset_field = fieldset.foo
-        
+        self.sfa.setFieldMap((dict(field_path= 'fieldset,foo',
+            form_field='', sf_field='Email'),))
+
         retriever = FieldValueRetriever(fieldset_field, self.app.REQUEST)
         sfa = retriever.getRelevantSFAdapter()
-        self.failUnless(sfa is self.sfa)
+        self.failUnless(sfa.aq_base is self.sfa.aq_base)
 
     def beforeTearDown(self):
         """clean up SF data"""

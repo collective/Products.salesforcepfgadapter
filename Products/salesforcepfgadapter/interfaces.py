@@ -1,6 +1,6 @@
 from zope.interface import Interface
 
-
 class ISalesforcePFGAdapter(Interface):
-    """Stub!
+    """
+    Marker interface for Salesforce PFG Adapters
     """
