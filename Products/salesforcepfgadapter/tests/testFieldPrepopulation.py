@@ -173,6 +173,19 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         data = retriever.retrieveData()
         self.assertEqual(data, {})
+    
+    def testCallingMultipleRetrieversInARequestCaches(self):
+        self._createTestContact()
+        
+        retriever = FieldValueRetriever(self.ff1.replyto, self.app.REQUEST)
+        lastname = retriever()
+        
+        # swap in some mock data, get the retriever for another field, and make
+        # sure it gives us the mock data
+        self.app.REQUEST._sfpfg_adapter['lastname'] = 'Smith'
+        retriever2 = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
+        lastname = retriever2()
+        self.assertEqual(lastname, 'Smith')
 
     def beforeTearDown(self):
         """clean up SF data"""
