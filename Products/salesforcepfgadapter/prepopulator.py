@@ -35,7 +35,7 @@ class FieldValueRetriever(BrowserView):
         if sfa is None:
             return {}
         
-        sObjectType = sfa.getSObjectType()
+        sObjectType = sfa.getSFObjectType()
         sf_key_field = sfa.getPrimaryKeyField()
         mappings = sfa.getFieldMap()
 
@@ -44,22 +44,26 @@ class FieldValueRetriever(BrowserView):
         for m in mappings:
             if m['sf_field'] == sf_key_field:
                 key_field_path = m['field_path']
+                break
         if key_field_path is None:
             return {}
-        key_field = self.form.restrictedTraverse(key_field_path)
-        key_value = key_field.getFgTDefault()
+        key_field = self.form.restrictedTraverse(key_field_path.replace(',', '/'))
+        key_field.fgPrimeDefaults(self.request)
+        key_value = getattr(self.request, key_field.__name__)
 
         # determine which fields to retrieve
         fieldList = [m['sf_field'] for m in mappings if m['sf_field']]
         
         sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
         res = sfbc.query(fieldList, sObjectType, "%s='%s'" % (sf_key_field, key_value))
-        if not len(res):
+        if not len(res['records']):
             return {}
         
         data = {}
         for m in mappings:
-            data[m['field_path']] = res[0][m['sf_field']]
+            if not m['sf_field']:
+                continue
+            data[m['field_path']] = res['records'][0][m['sf_field']]
         return data
 
     def getForm(self):

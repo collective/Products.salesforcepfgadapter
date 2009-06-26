@@ -11,5 +11,3 @@ logger = logging.getLogger("Products.salesforcepfgadapter")
 @adapter(interfaces.ISalesforcePFGAdapter, IObjectEditedEvent)
 def handle_adapter_saved(sf_adapter, event):
     logger.info("We hit our handler!")
-    import pdb; pdb.set_trace( )
-    

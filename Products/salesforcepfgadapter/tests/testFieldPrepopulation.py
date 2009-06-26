@@ -104,11 +104,20 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         super(TestFieldValueRetriever, self).afterSetUp()
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
+        self.ff1.invokeFactory('FormStringField', 'lastname')
+        self.lastname = self.ff1.lastname
+        self.lastname.setTitle('Last Name')
+        
+        # this is the value we're going to key on for populating the fields
+        self.ff1.replyto.setFgDefault('archimedes@doe.com')
+        self.ff1.replyto.setFgTDefault('')
 
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         self.sfa = getattr(self.ff1, 'salesforce')
-        self.test_fieldmap = (dict(field_path= 'replyto',
-            form_field='Your E-Mail Address', sf_field='Email'),)
+        self.test_fieldmap = (
+            dict(field_path='lastname', form_field='Last Name', sf_field='LastName'),
+            dict(field_path='replyto', form_field='Your E-Mail Address', sf_field='Email'),
+            )
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
         self.sfa.setPrimaryKeyField('Email')
@@ -123,7 +132,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
             LastName='Doe',
             FirstName='John',
             Phone='123-456-7890',
-            Email='john@doe.com',
+            Email='archimedes@doe.com',
             Birthdate = datetime.date(1970, 1, 4)
             )
         res = self.salesforce.create([data])
@@ -140,12 +149,30 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         fieldset = self.ff1.fieldset
         fieldset.invokeFactory('FormStringField', 'foo')
         fieldset_field = fieldset.foo
-        self.sfa.setFieldMap((dict(field_path= 'fieldset,foo',
-            form_field='', sf_field='Email'),))
+        fieldset_field.setTitle('Foo')
+        self.sfa.setFieldMap((
+            dict(field_path= 'fieldset,foo', form_field='Foo', sf_field='Email'),
+            ))
 
         retriever = FieldValueRetriever(fieldset_field, self.app.REQUEST)
         sfa = retriever.getRelevantSFAdapter()
         self.failUnless(sfa.aq_base is self.sfa.aq_base)
+    
+    def testRetrieveData(self):
+        self._createTestContact()
+        
+        retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
+        data = retriever.retrieveData()
+        self.assertEqual(data, {
+            'replyto': 'archimedes@doe.com',
+            'lastname': 'Doe',
+            })
+    
+    def testRetrieveDataNothingFound(self):
+        self.ff1.replyto.setFgDefault('not-a-real-email')
+        retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
+        data = retriever.retrieveData()
+        self.assertEqual(data, {})
 
     def beforeTearDown(self):
         """clean up SF data"""
