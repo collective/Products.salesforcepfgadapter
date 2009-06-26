@@ -8,6 +8,9 @@
 
   <five:deprecatedManageAddDelete
       class=".content.salesforcepfgadapter.SalesforcePFGAdapter" />
+      
+  <include package="Products.PloneFormGen"/>
+  <include package="Products.DataGridField"/>
 
   <gs:registerProfile
       name="default"
@@ -19,4 +22,5 @@
       for="Products.CMFPlone.interfaces.IPloneSiteRoot"
       />
 
+  <subscriber handler=".events.handle_adapter_saved" />
 </configure>
