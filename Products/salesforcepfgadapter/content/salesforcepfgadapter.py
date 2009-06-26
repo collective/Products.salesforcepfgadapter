@@ -52,6 +52,7 @@ from Products.PloneFormGen.content.actionAdapter import \
 from Products.salesforcepfgadapter.config import PROJECTNAME, REQUIRED_MARKER, SF_ADAPTER_TYPES
 from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
 from Products.salesforcepfgadapter import validators
+from Products.salesforcepfgadapter import interfaces
 
 logger = logging.getLogger("PloneFormGen")
 
