@@ -16,13 +16,19 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
     
     def afterSetUp(self):
-        self.test_fieldmap = (dict(field_path= 'replyto',
-            form_field='Your E-Mail Address', sf_field='Email'),)
+        self.test_fieldmap = ({'field_path' : 'replyto',
+                               'form_field' : 'Your E-Mail Address', 
+                               'sf_field' : 'Email'},
+                              {'field_path' : 'petname',
+                               'form_field' : 'pet',
+                               'sf_field' : 'Favorite_Pet__c'},)
         
         super(TestFieldPrepopulationSetting, self).afterSetUp()
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
-
+        
+        self.ff1.invokeFactory('FormStringField', 'pet')
+        
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         self.sfa = getattr(self.ff1, 'salesforce')
 
@@ -66,36 +72,39 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
         fieldset_field = fieldset.foo
         
         self.sfa.setSFObjectType('Contact')
-        self.sfa.setFieldMap((dict(field_path= 'fieldset/foo',
-            form_field='', sf_field='Email'),))
+        self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
         self.sfa.setPrimaryKeyField('ContactId')
         self.sfa.setPrepopulateFieldValues(True)
         notify(ObjectEditedEvent(self.sfa))
-
+        
         default_expr = self.ff1.fieldset.foo.getRawFgTDefault()
         self.assertEqual(default_expr, 'context/@@sf_value')
-
+    
     def testClearingPrepopulateSettingClearsFieldDefaults(self):
         self.ff1.replyto.setFgTDefault('context/@@sf_value')
-        self.sfa.setFieldMap((dict(field_path= 'replyto',
-            form_field='Your E-Mail Address', sf_field='Email')))
+        self.ff1.pet.setFgTDefault('Mittens')
+        self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
         self.sfa.setPrimaryKeyField('ContactId')
         self.sfa.setPrepopulateFieldValues(False)
         notify(ObjectEditedEvent(self.sfa))
         
         self.assertEqual(self.ff1.replyto.getRawFgTDefault(), '')
+        self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
     
     def testPrepopulateSettingDoesntPurgeCustomizedFieldDefaults(self):
         self.ff1.replyto.setFgTDefault('foobar')
+        self.ff1.pet.setFgTDefault('Mittens')
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
         self.sfa.setPrimaryKeyField('ContactId')
         self.sfa.setPrepopulateFieldValues(False)
         notify(ObjectEditedEvent(self.sfa))
-
+        
         self.assertEqual(self.ff1.replyto.getRawFgTDefault(), 'foobar')
+        self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
+    
 
 class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
