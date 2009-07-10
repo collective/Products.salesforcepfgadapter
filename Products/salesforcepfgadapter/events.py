@@ -5,7 +5,7 @@ from Products.Archetypes.interfaces import IObjectEditedEvent
 from Products.salesforcepfgadapter import interfaces
 
 UPSERT_MODE = 'upsert'
-SF_VIEW = 'context/@@sf_value'
+SF_VIEW = 'object/@@sf_value'
 PFG_EMAIL_DEFAULT = 'here/memberEmail'
 
 def _safe_to_override(field):

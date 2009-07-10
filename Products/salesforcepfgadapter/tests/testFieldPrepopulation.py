@@ -63,7 +63,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
         notify(ObjectEditedEvent(self.sfa))
         
         default_expr = self.ff1.replyto.getRawFgTDefault()
-        self.assertEqual(default_expr, 'context/@@sf_value')
+        self.assertEqual(default_expr, 'object/@@sf_value')
     
     def testPrepopulateSettingSetsFieldDefaultsForFieldsInFieldsets(self):
         self.ff1.invokeFactory('FieldsetFolder', 'fieldset')
@@ -79,10 +79,10 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
         notify(ObjectEditedEvent(self.sfa))
         
         default_expr = self.ff1.fieldset.foo.getRawFgTDefault()
-        self.assertEqual(default_expr, 'context/@@sf_value')
+        self.assertEqual(default_expr, 'object/@@sf_value')
     
     def testClearingPrepopulateSettingClearsFieldDefaults(self):
-        self.ff1.replyto.setFgTDefault('context/@@sf_value')
+        self.ff1.replyto.setFgTDefault('object/@@sf_value')
         self.ff1.pet.setFgTDefault('Mittens')
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('upsert')
