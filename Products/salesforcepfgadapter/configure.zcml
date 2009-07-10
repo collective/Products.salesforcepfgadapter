@@ -29,7 +29,7 @@
       for="Products.PloneFormGen.interfaces.IPloneFormGenField"
       name="sf_value"
       class=".prepopulator.FieldValueRetriever"
-      permission="Public"
+      permission="zope.Public"
       />
 
 </configure>
