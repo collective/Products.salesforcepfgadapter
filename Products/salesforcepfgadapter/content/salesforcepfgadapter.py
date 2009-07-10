@@ -132,11 +132,15 @@ schema = FormAdapterSchema.copy() + Schema((
         schemata="mode",
         required=True,
         searchable=False,
-        vocabulary=["create","upsert"],
-        default="create",
+        vocabulary=DisplayList((
+            ('create', 'create - Always add a new object.'),
+            ('upsert', 'upsert - Update an existing object if a key field matches; otherwise add a new one.'),
+            ('update', 'update - Update an existing object if a key field matches; otherwise fail.')
+            )),
+        default='create',
         widget=SelectionWidget(
-            label=_(u"Do update"),
-            description=_(u"Do you want to create new objects or update existing?"),
+            label=_(u'Creation Mode'),
+            description=_(u'Select which action should be performed when the form containing this adapter is submitted.'),
             format="radio",
          ),
     ),
@@ -150,9 +154,9 @@ schema = FormAdapterSchema.copy() + Schema((
         # default="contact_id",
         widget=SelectionWidget(
             label=_(u"Salesforce primary key field"),
-            description=_(u"Salesforce field to be used to find and existing record"),
+            description=_(u"Salesforce field to be used to match an existing record."),
          ),
-    ),    
+    ),
     
     BooleanField(
         'prepopulateFieldValues',
@@ -161,7 +165,7 @@ schema = FormAdapterSchema.copy() + Schema((
         default=False,
         widget=BooleanWidget(
             label=_(u"Prepopulate field values on form load"),
-            description=_(u"You know... prepopulate.")
+            description=_(u"If selected, the form will prefill existing values from an object in Salesforce when it is loaded.  The object will be found by matching the primary key field expression, and fields will be filled based on the field mapping.  Has no effect when the creation mode is set to 'create'.")
         ),
     ),
 
