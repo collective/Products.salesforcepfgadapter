@@ -196,6 +196,15 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         lastname = retriever2()
         self.assertEqual(lastname, 'Smith')
 
+    def testRetrieveNonUniqueValueRaises(self):
+        # Create two contacts that will have the same value for the key field
+        self._createTestContact()
+        self._createTestContact()
+        # Since there is not a single record with this last name, we should
+        # raise and exception
+        retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
+        self.assertRaises(Exception, retriever.retrieveData)
+    
     def beforeTearDown(self):
         """clean up SF data"""
         ids = self._todelete
