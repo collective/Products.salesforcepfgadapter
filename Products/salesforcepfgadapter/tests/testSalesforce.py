@@ -20,7 +20,7 @@ from Products.salesforcepfgadapter.config import REQUIRED_MARKER
 
 
 class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
-    """ test save data adapter """
+    """ test basic salesforce adapter features """
     
     def afterSetUp(self):        
         super(TestSalesforcePFGAdapter, self).afterSetUp()
