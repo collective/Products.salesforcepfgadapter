@@ -58,7 +58,7 @@ class FieldValueRetriever(BrowserView):
         res = sfbc.query(fieldList, sObjectType, "%s='%s'" % (sf_key_field, key_value))
         if not len(res['records']):
             return {}
-        if len(res['records'] > 1):
+        if len(res['records']) > 1:
             raise Exception('Multiple records found; you must use a unique key.')
 
         data = {}
