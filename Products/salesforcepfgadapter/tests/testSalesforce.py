@@ -278,7 +278,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         from Products.Archetypes.interfaces import IMultiPageSchema
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         sfSchema = self.ff1.salesforce.schema
-        self.assertEquals(['default', 'field mapping', 'overrides'], sfSchema.getSchemataNames())
+        self.assertEquals(['default', 'field mapping', 'mode', 'overrides'], sfSchema.getSchemataNames())
     
     def testSalesforceAdapterOnSuccess(self):
         """Ensure that our Salesforce Adapter mapped objects
