@@ -1,5 +1,10 @@
 1.6 (svn/unreleased)
 
+- Added a 'Preset field values' setting so that hardcoded values can be mapped
+  to Salesforce fields without having to create a hidden form field. Thanks to
+  Jon Stahl for the suggestion.
+  [davisagli]
+
 - Use the field id instead of title as the key column for the field mapping,
   so that it's possible to set the mapping programmatically without worrying
   about the titles.

@@ -2,8 +2,24 @@ TODO.txt
 
 1.5+ - Future ideas
 
+- write test for preset value map
 - finish implementing create/upsert/update options
+ * upsert, prepopulated:
+  - query on form load, preserve that id and do an update to it on submit
+  - if nothing found, just use defaults
+ * upsert, not prepopulated: 
+  - do an upsert API call on submit
+  - make sure it's sane if there are multiple matches
+ * update, prepopulated:
+  - query on form load, preserve that id and do an update to it on submit
+  - raise error if nothing found on form load
+ * update, not prepopulated
+  - query to find id of existing object that matches the key expression
+  - raise error if nothing found or more than one found
+
 - add a separate data grid for mapping additional hardcoded values (to avoid the need for using "server side fields")
+- change default sObjectType to Lead
+- make sure e-mail default expr doesn't get clobbered when turning off prepopulation setting
 
 - An error should be thrown if Salesforce PFG Adapter product is installed and no Salesforce Base Connector
   object has been added to the site.
