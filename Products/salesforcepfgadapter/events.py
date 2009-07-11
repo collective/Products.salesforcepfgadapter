@@ -19,7 +19,7 @@ def _set_default(sf_adapter, new_default):
     sf_key_field = sf_adapter.getPrimaryKeyField()
     mappings = sf_adapter.getFieldMap()
     for m in mappings:
-        if m['sf_field'] != sf_key_field:
+        if 'sf_field' in m and m['sf_field'] != sf_key_field:
             field_path = m['field_path'].replace(',', '/')
             field = form_folder.restrictedTraverse(field_path)
             if _safe_to_override(field):
