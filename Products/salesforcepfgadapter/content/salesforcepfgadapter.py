@@ -268,8 +268,14 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     # add in the preset values
                     for mapping in adapter.getPresetValueMap():
                         sObject[mapping['sf_field']] = mapping['value']
+                        
+                    if self.getCreationMode() == 'upsert':
+                        sf_primary_key = self.getPrimaryKeyField()
+                        result = salesforce.upsert(sf_primary_key, sObject)[0]
+                    else: # create
+                        result = salesforce.create(sObject)[0]
+                    
 
-                    result = salesforce.create(sObject)[0]
                     if result['success']:
                         logger.debug("Successfully created new %s %s in Salesforce" % \
                                      (adapter.SFObjectType, result['id']))

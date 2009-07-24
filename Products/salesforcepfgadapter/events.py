@@ -27,6 +27,7 @@ def _set_default(sf_adapter, new_default):
 
 def _sf_defaults_activated(sf_adapter):
     # if we're upserting and prepopulating, we're active
+    # TODO: simplify to just return  sf_adapter.getPrepopulateFieldValues()
     return sf_adapter.getCreationMode() == UPSERT_MODE and \
                 sf_adapter.getPrepopulateFieldValues()
 

@@ -36,7 +36,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
                 ids = ids[200:]
             self.salesforce.delete(ids)
     
-    def testUpsert(self):
+    def testUpsertPriamryKeyMatch(self):
         """Ensure that our Salesforce Adapter mapped objects
            find their way into the appropriate Salesforce.com
            instance.
