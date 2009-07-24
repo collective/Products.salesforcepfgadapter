@@ -26,21 +26,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         super(TestUpdateModes, self).afterSetUp()
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
-    
-    def beforeTearDown(self):
-        """clean up SF data"""
-        ids = self._todelete
-        if ids:
-            while len(ids) > 200:
-                self.salesforce.delete(ids[:200])
-                ids = ids[200:]
-            self.salesforce.delete(ids)
-    
-    def testUpsertPriamryKeyMatch(self):
-        """Ensure that our Salesforce Adapter mapped objects
-           find their way into the appropriate Salesforce.com
-           instance.
-        """
+        
         # create our action adapter
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'contact_adapter')
         
@@ -55,6 +41,21 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
             {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
         
+    
+    def beforeTearDown(self):
+        """clean up SF data"""
+        ids = self._todelete
+        if ids:
+            while len(ids) > 200:
+                self.salesforce.delete(ids[:200])
+                ids = ids[200:]
+            self.salesforce.delete(ids)
+    
+    def testUpsertPrimaryKeyMatch(self):
+        """Ensure that our Salesforce Adapter mapped objects
+           find their way into the appropriate Salesforce.com
+           instance.
+        """
         
         # build the request and submit the form
         fields = self.ff1._getFieldObjects()
@@ -87,6 +88,51 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
             self._todelete.append(item['Id'])
         self.assertEqual(1, res['size'])
         self.assertEqual('PloneTestCaseChanged', res['records'][0]['LastName'])      
+
+    def testUpsertWithNoMatchingRecord(self):
+        """Ensure that our Salesforce Adapter mapped objects
+           find their way into the appropriate Salesforce.com
+           instance.
+        """
+        # set mode to 'upsert' so we update rather than create
+        self.ff1.contact_adapter.setCreationMode('upsert')
+        self.ff1.contact_adapter.setPrimaryKeyField('Email')
+        
+        # build the request and submit the form
+        fields = self.ff1._getFieldObjects()
+        request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
+                                   comments='PloneTestCase')            # mapped to LastName (see above)
+        
+        # we are in upsert mode, does it work?
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # direct query of Salesforce to get the id of the newly created contact
+        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
+        self._todelete.append(res['records'][0]['Id'])
+        
+        # assert that our newly created Contact was found
+        self.assertEqual(1, res['size'])
+    
+        
+        # submit again, after changing the non-key value
+        request = base.FakeRequest(replyto = 'plonetestcase2@plone.org', # this is the Primary key
+                                   comments='PloneTestCaseChanged')     # mapped to LastName (see above)
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # we should get one record
+        res = self.salesforce.query(['Id'],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org'")
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
+
+        # we should get one record for the newest upsert.
+        res = self.salesforce.query(['Id'],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase2@plone.org'")
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
     
 
 def test_suite():
