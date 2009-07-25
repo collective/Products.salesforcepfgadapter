@@ -19,16 +19,17 @@ class FieldValueRetriever(BrowserView):
         self.context = context
         self.request = request
         self.form = self.getForm()
-
+    
     def __call__(self):
         data = getattr(self.request, config.REQUEST_KEY, None)
         if data is None:
             data = self.retrieveData()
             setattr(self.request, config.REQUEST_KEY, data)
-
+            self.request.SESSION.set(config.SESSION_KEY, {'sf_upsert_id':data['Id']})
+            
         field_path = self.getFieldPath()
         return data.get(field_path, None)
-
+    
     def retrieveData(self):
         sfa = self.getRelevantSFAdapter()
         if sfa is None:
@@ -52,7 +53,9 @@ class FieldValueRetriever(BrowserView):
 
         # determine which fields to retrieve
         fieldList = [m['sf_field'] for m in mappings if m['sf_field']]
-        
+        # we always want the ID
+        fieldList.append('Id')
+
         sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
         res = sfbc.query(fieldList, sObjectType, "%s='%s'" % (sf_key_field, key_value))
         if not len(res['records']):
@@ -60,7 +63,7 @@ class FieldValueRetriever(BrowserView):
         if len(res['records']) > 1:
             raise Exception('Multiple records found; you must use a unique key.')
 
-        data = {}
+        data = {'Id':res['records'][0]['Id']}
         for m in mappings:
             if not m['sf_field']:
                 continue

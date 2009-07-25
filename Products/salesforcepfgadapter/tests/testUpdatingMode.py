@@ -13,7 +13,7 @@ from Products.Archetypes.event import ObjectEditedEvent
 from Products.CMFCore.utils import getToolByName
 
 from Products.Archetypes.public import DisplayList
-
+from Products.ATContentTypes.tests.utils import FakeRequestSession
 from Products.PloneFormGen.interfaces import IPloneFormGenField
 
 from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
@@ -142,6 +142,8 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         self.assertEqual(1, res['size'])
     
     def testUseUIDOnUpsert(self):
+        self.app.REQUEST['SESSION'] = FakeRequestSession()
+        import pdb; pdb.set_trace( )
         # set mode to 'upsert' so we update rather than create
         self.ff1.contact_adapter.setCreationMode('upsert')
         self.ff1.contact_adapter.setPrimaryKeyField('Email')
@@ -153,11 +155,17 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         id = 'ploney'
         pw = 'secret'
         email = 'original@plonetestcase.org'
-        import pdb; pdb.set_trace( )
         member = self._createMember(id, pw, email, roles=('Member',))
         # log in as this user
         self.login(member.id)
         # View form to trigger Salesforce lookup
+        # XXX TODO This method of grabbing the form does not trigger the prepopulator, so things aren't
+        # working like the do TTW
+        # Perhaps try calling the view implemented with FieldValueRetriever on the first field?
+        # PSUEDO CODE
+        # form_obj = self.folder.ff1
+        # first_field = form_obj.first_field
+        # view = something to get view
         form = self.folder.restrictedTraverse('ff1')
         # Inspect SESSION to verify it's been set to something ID-like
         self.failUnless(config.SESSION_KEY in self.app.REQUEST.SESSION, "Failed to set session variable!")
