@@ -7,6 +7,9 @@ if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
 from zope.interface import providedBy
+from zope.event import notify
+
+from Products.Archetypes.event import ObjectEditedEvent
 from Products.CMFCore.utils import getToolByName
 
 from Products.Archetypes.public import DisplayList
@@ -16,11 +19,16 @@ from Products.PloneFormGen.interfaces import IPloneFormGenField
 from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
 from Products.salesforcepfgadapter.tests import base
-from Products.salesforcepfgadapter.config import REQUIRED_MARKER
+from Products.salesforcepfgadapter import config
 
 
 class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
     """ test alternate Salesforce adapter modes (update, upsert)"""
+    
+    def _createMember(self, id, pw, email, roles=('Member',)):
+        pr = self.portal.portal_registration
+        member = pr.addMember(id, pw, roles, properties={ 'username': id, 'email' : email })
+        return member
     
     def afterSetUp(self):        
         super(TestUpdateModes, self).afterSetUp()
@@ -113,7 +121,6 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         
         # assert that our newly created Contact was found
         self.assertEqual(1, res['size'])
-    
         
         # submit again, after changing the non-key value
         request = base.FakeRequest(replyto = 'plonetestcase2@plone.org', # this is the Primary key
@@ -133,6 +140,47 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         for item in res['records']:
             self._todelete.append(item['Id'])
         self.assertEqual(1, res['size'])
+    
+    def testUseUIDOnUpsert(self):
+        # set mode to 'upsert' so we update rather than create
+        self.ff1.contact_adapter.setCreationMode('upsert')
+        self.ff1.contact_adapter.setPrimaryKeyField('Email')
+        self.ff1.contact_adapter.setPrepopulateFieldValues(True)
+        # Make sure we set the SF prepopulators
+        notify(ObjectEditedEvent(self.ff1.contact_adapter))
+        
+        # create a user with an email address
+        id = 'ploney'
+        pw = 'secret'
+        email = 'original@plonetestcase.org'
+        import pdb; pdb.set_trace( )
+        member = self._createMember(id, pw, email, roles=('Member',))
+        # log in as this user
+        self.login(member.id)
+        # View form to trigger Salesforce lookup
+        form = self.folder.restrictedTraverse('ff1')
+        # Inspect SESSION to verify it's been set to something ID-like
+        self.failUnless(config.SESSION_KEY in self.app.REQUEST.SESSION, "Failed to set session variable!")
+        # Change primary key value 
+        request = base.FakeRequest(replyto = 'changed@plonetestcase.org', # this is the Primary key
+                                   comments='PloneTestCase')             # mapped to LastName (see above)        
+        # Submit form
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # Verify there are no records returned when querying for the original email
+        res = self.salesforce.query(['Id'],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='original@plonetestcase.org'")
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(0, res['size'])
+        
+        # Verify that the record corresponding to the Session ID has been changed!
+        res = self.salesforce.query(['Id'],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='changed@plonetestcase.org'")
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
+        self.assertEqual('changed@plonetestcase.org', res['records'][0]['Email'])
     
 
 def test_suite():

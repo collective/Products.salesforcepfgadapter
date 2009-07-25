@@ -3,8 +3,7 @@ from zope.component import adapts
 from Products.PloneFormGen.interfaces import IPloneFormGenForm, IPloneFormGenField
 from Products.Five import BrowserView
 from Products.CMFCore.utils import getToolByName
-
-REQUEST_KEY = '_sfpfg_adapter'
+from Products.salesforcepfgadapter import config
 
 class FieldValueRetriever(BrowserView):
     """
@@ -22,10 +21,10 @@ class FieldValueRetriever(BrowserView):
         self.form = self.getForm()
 
     def __call__(self):
-        data = getattr(self.request, REQUEST_KEY, None)
+        data = getattr(self.request, config.REQUEST_KEY, None)
         if data is None:
             data = self.retrieveData()
-            setattr(self.request, REQUEST_KEY, data)
+            setattr(self.request, config.REQUEST_KEY, data)
 
         field_path = self.getFieldPath()
         return data.get(field_path, None)
