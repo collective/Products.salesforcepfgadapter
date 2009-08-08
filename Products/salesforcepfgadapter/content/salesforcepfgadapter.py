@@ -53,6 +53,7 @@ from Products.salesforcepfgadapter.config import PROJECTNAME, REQUIRED_MARKER, S
 from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
 from Products.salesforcepfgadapter import validators
 from Products.salesforcepfgadapter import interfaces
+from Products.salesforcepfgadapter import config
 
 logger = logging.getLogger("PloneFormGen")
 
@@ -270,8 +271,17 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         sObject[mapping['sf_field']] = mapping['value']
                         
                     if self.getCreationMode() == 'upsert':
-                        sf_primary_key = self.getPrimaryKeyField()
-                        result = salesforce.upsert(sf_primary_key, sObject)[0]
+                        # get the user's SF UID from the session
+                        form_id = aq_parent(self).UID()
+                        # completely reckless for now...
+                        uid = self._userIdToUpdate()
+                        if uid:
+                            sObject['Id'] = uid
+                            result = salesforce.update(sObject)[0]
+                            self._clearSession(form_id)
+                        else:
+                            sf_primary_key = self.getPrimaryKeyField()
+                            result = salesforce.upsert(sf_primary_key, sObject)[0]
                     else: # create
                         result = salesforce.create(sObject)[0]
                     
@@ -286,6 +296,19 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         raise errorStr
                 else:
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
+    
+    def _userIdToUpdate(self):
+        form_id = aq_parent(self).UID()
+        session = self.REQUEST.SESSION
+        if config.SESSION_KEY in session and form_id in session[config.SESSION_KEY]:
+            return session[config.SESSION_KEY][form_id]
+    
+        return None
+    
+    def _clearSession(self, form_id):
+        session = self.REQUEST.SESSION
+        if config.SESSION_KEY in session and form_id in session[config.SESSION_KEY]:
+            del(session[config.SESSION_KEY][form_id])
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form

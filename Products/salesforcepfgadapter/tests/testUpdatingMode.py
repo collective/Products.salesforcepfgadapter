@@ -1,7 +1,7 @@
 # Integration tests specific to Salesforce adapter
 #
 
-import os, sys
+import os, sys, datetime
 
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
@@ -29,6 +29,11 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         pr = self.portal.portal_registration
         member = pr.addMember(id, pw, roles, properties={ 'username': id, 'email' : email })
         return member
+    
+    def _createTestContact(self, data):
+        res = self.salesforce.create([data])
+        self.objid = id = res[0]['id']
+        self._todelete.append(id)
     
     def afterSetUp(self):        
         super(TestUpdateModes, self).afterSetUp()
@@ -143,7 +148,6 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
     
     def testUseUIDOnUpsert(self):
         self.app.REQUEST['SESSION'] = FakeRequestSession()
-        import pdb; pdb.set_trace( )
         # set mode to 'upsert' so we update rather than create
         self.ff1.contact_adapter.setCreationMode('upsert')
         self.ff1.contact_adapter.setPrimaryKeyField('Email')
@@ -151,11 +155,20 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         # Make sure we set the SF prepopulators
         notify(ObjectEditedEvent(self.ff1.contact_adapter))
         
-        # create a user with an email address
+        # create a Plone user with an email address
         id = 'ploney'
         pw = 'secret'
         email = 'original@plonetestcase.org'
         member = self._createMember(id, pw, email, roles=('Member',))
+        # create a parallel Contact in Salesforce
+        contact = dict(type='Contact',
+            LastName='PloneTestCase',
+            FirstName='Plone',
+            Phone='123-456-7890',
+            Email=email,
+            Birthdate = datetime.date(1970, 1, 4)
+            )
+        self._createTestContact(contact)
         # log in as this user
         self.login(member.id)
         # View form to trigger Salesforce lookup
@@ -167,14 +180,17 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         # first_field = form_obj.first_field
         # view = something to get view
         form = self.folder.restrictedTraverse('ff1')
+        # render it to invoke the prepopulator
+        form()
         # Inspect SESSION to verify it's been set to something ID-like
         self.failUnless(config.SESSION_KEY in self.app.REQUEST.SESSION, "Failed to set session variable!")
         # Change primary key value 
         request = base.FakeRequest(replyto = 'changed@plonetestcase.org', # this is the Primary key
                                    comments='PloneTestCase')             # mapped to LastName (see above)        
         # Submit form
+        fields = form._getFieldObjects()
         self.ff1.contact_adapter.onSuccess(fields, request)
-        
+
         # Verify there are no records returned when querying for the original email
         res = self.salesforce.query(['Id'],self.ff1.contact_adapter.getSFObjectType(),
                                     "Email='original@plonetestcase.org'")
@@ -183,7 +199,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterTestCase):
         self.assertEqual(0, res['size'])
         
         # Verify that the record corresponding to the Session ID has been changed!
-        res = self.salesforce.query(['Id'],self.ff1.contact_adapter.getSFObjectType(),
+        res = self.salesforce.query(['Id','Email'], self.ff1.contact_adapter.getSFObjectType(),
                                     "Email='changed@plonetestcase.org'")
         for item in res['records']:
             self._todelete.append(item['Id'])

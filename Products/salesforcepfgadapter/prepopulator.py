@@ -25,7 +25,10 @@ class FieldValueRetriever(BrowserView):
         if data is None:
             data = self.retrieveData()
             setattr(self.request, config.REQUEST_KEY, data)
-            self.request.SESSION.set(config.SESSION_KEY, {'sf_upsert_id':data['Id']})
+            if 'Id' in data:
+                formkey = self.form.UID()
+                self.request.SESSION.set(config.SESSION_KEY, 
+                                         {formkey:data['Id']})
             
         field_path = self.getFieldPath()
         return data.get(field_path, None)
