@@ -1,3 +1,6 @@
+1.5.2 - unreleased
+
+
 1.5.1 - released August 12, 2009
 
 - Fix for issue #13, whereby hitting the next button while editing a
