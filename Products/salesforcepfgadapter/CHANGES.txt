@@ -1,4 +1,4 @@
-1.5.1 (svn/unreleased)
+1.5.1 - released August 12, 2009
 
 - Fix for issue #13, whereby hitting the next button while editing a
   Salesforce Adapter with PloneFormGen 1.5b2 redirected off to the Form 
