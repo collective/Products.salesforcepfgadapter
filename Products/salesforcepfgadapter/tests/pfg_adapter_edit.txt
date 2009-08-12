@@ -1,0 +1,37 @@
+============================
+ Salesforce PFG Adapter Edit
+============================
+
+Get our test browser and get some permissions in place::
+
+    >>> from Products.Five.testbrowser import Browser
+    >>> browser = Browser()
+    >>> portal_url = 'http://nohost/plone'
+    >>> self.app.acl_users.userFolderAddUser('root', 'secret', ['Manager'], [])
+    >>> browser.addHeader('Authorization', 'Basic root:secret')
+
+Add a new form folder to contain our Salesforce Adapter::
+
+    >>> self.setRoles(['Manager'])
+    >>> self.portal.invokeFactory('FormFolder', 'testform')
+    'testform'
+
+Let's now add a Salesforce Adapter and populate a few values on our adapter::
+    
+    >>> browser.open("%s/testform/view" % portal_url)
+    >>> browser.getLink('Salesforce Adapter').click()
+    >>> browser.getControl('Title').value = 'Contact Adapter'
+    >>> browser.getControl('Salesforce Object Type').value = ('Contact',)
+    >>> browser.getControl(name='form.button.next').click()
+
+Now assuming we've fixed issue #13 in our tracker, hitting next should take
+us directly our field mapping schemata, not back to the quick edit provided by
+PloneFormGen per the ticket::
+
+    >>> "fieldMap.sf_field:records" in browser.contents
+    True
+    >>> "dependencyMap.sf_field:records" in browser.contents
+    True
+    
+
+

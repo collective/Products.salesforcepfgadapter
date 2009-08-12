@@ -7,6 +7,7 @@ from Products.salesforcepfgadapter.tests import base
 
 testfiles = (
     'pfg_adapter_view.txt',
+    'pfg_adapter_edit.txt',
 )
 
 def test_suite():

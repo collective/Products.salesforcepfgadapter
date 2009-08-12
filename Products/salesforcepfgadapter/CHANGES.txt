@@ -1,3 +1,10 @@
+1.5.1 (svn/unreleased)
+
+- Fix for issue #13, whereby hitting the next button while editing a
+  Salesforce Adapter with PloneFormGen 1.5b2 redirected off to the Form 
+  Folder's Quick Edit UI, rather than the field mapping UI as expected.
+  [andrewb]
+
 1.5  - released February 18, 2009
 
 - Clean-up of overly long lines (e.g. > 80 chars) in README.txt 
