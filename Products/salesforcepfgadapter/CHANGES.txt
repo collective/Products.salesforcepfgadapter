@@ -1,3 +1,8 @@
+1.5.2 - released August 13, 2009
+
+- Fix broken release.
+  [davisagli]
+
 1.5.1 - released August 12, 2009
 
 - Fix for issue #13, whereby hitting the next button while editing a
