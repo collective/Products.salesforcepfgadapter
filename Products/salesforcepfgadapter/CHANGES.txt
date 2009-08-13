@@ -1,7 +1,5 @@
-1.5.2 - released August 13, 2009
+1.5.2 - unreleased
 
-- Fix broken distribution.
-  [davisagli]
 
 1.5.1 - released August 12, 2009
 
