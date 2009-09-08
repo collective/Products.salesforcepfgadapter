@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.6 (svn/unreleased)
+1.6b1 (2009-09-08)
 
 - Adjust calls to the salesforcebaseconnector query method to use a single
   full SOQL statement.  beatbox >= 16.0dev is now required.
@@ -177,7 +177,7 @@ Changelog
   http://www.nabble.com/Product-install-regression--td14165955.html#a14165955 
   [andrewb]
 
-- Cleaning up naughty "import *" statement within Install.py 
+- Cleaning up naughty "import \*" statement within Install.py 
   [andrewb]
 
 1.0rc1
@@ -242,5 +242,6 @@ Changelog
 
  - Initial import and creation of standalone product originally created at the 
    following branch:
-     http://svn.plone.org/svn/collective/PloneFormGen/branches/salesforce_adapter_branch/
+  
+     - http://svn.plone.org/svn/collective/PloneFormGen/branches/salesforce_adapter_branch/
 

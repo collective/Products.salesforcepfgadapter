@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.6'
+version = '1.6b1'
 
 setup(name='Products.salesforcepfgadapter',
       version=version,
@@ -27,7 +27,7 @@ setup(name='Products.salesforcepfgadapter',
       install_requires=[
           'setuptools',
           'beatbox>=16.0dev',
-          'Products.salesforcebaseconnector>=1.1.1',
+          'Products.salesforcebaseconnector>=1.2b1',
           'Products.PloneFormGen>=1.5.0',
           'Products.DataGridField>=1.6',
           # -*- Extra requirements: -*-

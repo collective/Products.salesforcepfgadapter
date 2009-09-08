@@ -128,7 +128,7 @@ offers the following additional features:
 Dependencies
 ============
 
-Depends upon the beatbox library >= 0.9.1.1, which is a Python wrapper to the
+Depends upon the beatbox library >= 16.0b1, which is a Python wrapper to the
 Salesforce.com API (version 7.0).  You must have a Salesforce.com account
 that provides API access.
 
@@ -140,10 +140,10 @@ Tested with all versions of Plone in the 3.x series and their relevant
 dependencies. For use of SalesforcePFGAdapter with the 2.5.x series of Plone,
 please try SalesforcePFGAdapter version 1.5.
 
-See dependencies for PloneFormGen 1.2.x+.  As a pre-requisite, all of these must be 
+See dependencies for PloneFormGen 1.5.x+.  As a pre-requisite, all of these must be 
 met in order to use the Salesforce PFG Adapter.
 
-SalesforceBaseConnector >= 1.0a3. See 
+SalesforceBaseConnector >= 1.2b1. See 
 http://plone.org/products/salesforcebaseconnector
 
 DataGridField >= 1.6.x.  Earlier versions didn't properly disable 
@@ -192,7 +192,7 @@ See Known Problems section of README.txt within PloneFormGen. In addition:
   response: SoapFaultError: 'UNKNOWN_EXCEPTION' 'UNKNOWN_EXCEPTION: Server 
   unavailable due to scheduled maintenance'
 
-This is left unfixed in all branches <=1.5.x of the Salesforce PFG Adapter, 
+This is left unfixed in all branches <=1.6.x of the Salesforce PFG Adapter, 
 due to the modifications that would be required to adequately handle the case 
 with technologies lower in the stack, such as Salesforce Base Connector and 
 beatbox. This will be addressed in a future release.
