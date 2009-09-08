@@ -7,7 +7,7 @@ setup(name='Products.salesforcepfgadapter',
       version=version,
       description="PloneFormGen adapter allowing for creation of arbitrary Salesforce.com \
         records based on data collected from a web form",
-      long_description=open(os.path.join("Products", "salesforcepfgadapter", "README.txt")).read(),
+      long_description=open(os.path.join("Products", "salesforcepfgadapter", "README.txt")).read() + "\n" + open(os.path.join('Products', 'salesforcepfgadapter', 'CHANGES.txt')).read(),
       # Get more strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
         "Programming Language :: Python",
@@ -26,10 +26,10 @@ setup(name='Products.salesforcepfgadapter',
       zip_safe=False,
       install_requires=[
           'setuptools',
-          'beatbox>=0.9,<=1.0dev',
-          'Products.salesforcebaseconnector',
-          'Products.PloneFormGen',
-          'Products.DataGridField',
+          'beatbox>=16.0dev',
+          'Products.salesforcebaseconnector>=1.1.1',
+          'Products.PloneFormGen>=1.5.0',
+          'Products.DataGridField>=1.6',
           # -*- Extra requirements: -*-
       ],
       entry_points="""

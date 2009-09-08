@@ -1,7 +1,7 @@
 # Integration tests specific to Salesforce adapter
 #
 
-import os, sys, email
+import os, sys
 
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
@@ -84,13 +84,16 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.ff1.account_adapter.onSuccess(fields, request)
         
         # salesforce queries and cleanup
-        contact_res = self.salesforce.query(['Id','AccountId',],
-                                            'Contact',
-                                            """LastName = 'testChainedDependenciesInsertCorrectly' \
-                                            AND Email = 'testChainedDependenciesInsertCorrectly@plone.org'""")
+        contact_res = self.salesforce.query(
+            "SELECT Id, AccountId FROM Contact WHERE LastName='%s' AND Email='%s'" % (
+                'testChainedDependenciesInsertCorrectly',
+                'testChainedDependenciesInsertCorrectly@plone.org'
+                )
+            )
         self._todelete.append(contact_res['records'][0]['Id']) # for clean-up
 
-        account_res = self.salesforce.query(['Id',], 'Account', "Name = 'testChainedDependenciesInsertCorrectly'")
+        account_res = self.salesforce.query(
+            "SELECT Id FROM Account WHERE Name = 'testChainedDependenciesInsertCorrectly'")
         account_id = account_res['records'][0]['Id']
         self._todelete.append(account_id) # for clean-up
 
@@ -145,13 +148,16 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.onSuccess(fields, request)
         
         # salesforce queries and cleanup
-        contact_res = self.salesforce.query(['Id','AccountId',],
-                                            'Contact',
-                                            """LastName = 'testChainedRespectDisabledFinalAdapters' \
-                                            AND Email = 'testChainedRespectDisabledFinalAdapters@plone.org'""")
+        contact_res = self.salesforce.query(
+            "SELECT Id, AccountId FROM Contact WHERE LastName='%s' AND Email='%s'" % (
+                'testChainedRespectDisabledFinalAdapters',
+                'testChainedRespectDisabledFinalAdapters@plone.org'
+                )
+            )
         self._todelete.append(contact_res['records'][0]['Id']) # for clean-up
         
-        account_res = self.salesforce.query(['Id',], 'Account', "Name = 'testChainedRespectDisabledFinalAdapters'")
+        account_res = self.salesforce.query(
+            "SELECT Id FROM Account WHERE Name = 'testChainedRespectDisabledFinalAdapters'")
         
         # assertions
         self.assertEqual(1, contact_res['size'])
@@ -205,13 +211,16 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.onSuccess(fields, request)
         
         # salesforce queries and cleanup
-        contact_res = self.salesforce.query(['Id','AccountId',],
-                                            'Contact',
-                                            """LastName = 'testChainedRespectNonexecutableFinalAdapters' \
-                                            AND Email = 'testChainedRespectNonexecutableFinalAdapters@plone.org'""")
+        contact_res = self.salesforce.query(
+            "SELECT Id, AccountId FROM Contact WHERE LastName='%s' AND Email='%s'" % (
+                'testChainedRespectNonexecutableFinalAdapters',
+                'testChainedRespectNonexecutableFinalAdapters@plone.org'
+                )
+            )
         self._todelete.append(contact_res['records'][0]['Id']) # for clean-up
         
-        account_res = self.salesforce.query(['Id',], 'Account', "Name = 'testChainedRespectNonexecutableFinalAdapters'")
+        account_res = self.salesforce.query(
+            "SELECT Id FROM Account WHERE Name = 'testChainedRespectNonexecutableFinalAdapters'")
         
         # assertions
         self.assertEqual(1, contact_res['size'])

@@ -119,9 +119,8 @@ class TestSalesforceFormDateFieldInteraction(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.onSuccess(fields, request)  
         
         # query for our attachment
-        contact_res = self.salesforce.query(['Id','Birthdate'],
-                                            'Contact',
-                                            "LastName='PloneTestCaseEmptyDateField'")
+        contact_res = self.salesforce.query(
+            "SELECt Id, Birthdate FROM Contact WHERE LastName='PloneTestCaseEmptyDateField'")
         
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(contact_res['records'][0]['Id'])

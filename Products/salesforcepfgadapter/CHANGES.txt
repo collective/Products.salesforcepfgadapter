@@ -1,4 +1,11 @@
+Changelog
+=========
+
 1.6 (svn/unreleased)
+
+- Adjust calls to the salesforcebaseconnector query method to use a single
+  full SOQL statement.  beatbox >= 16.0dev is now required.
+  [davisagli]
 
 - Use the field id instead of title as the key column for the field mapping,
   so that it's possible to set the mapping programmatically without worrying
@@ -9,11 +16,6 @@
   with use of onsetup decorator.
   [andrewb]
 
-- Fix for issue #13, whereby hitting the next button while editing a
-  Salesforce Adapter with PloneFormGen 1.5b2 redirected off to the Form 
-  Folder's Quick Edit UI, rather than the field mapping UI as expected.
-  [andrewb]
-
 - Move substantial portions of package installation to GenericSetup.
   [andrewb]
 
@@ -22,6 +24,19 @@
   [andrewb]
 
 - Added metadata.xml to GenericSetup profile.
+  [andrewb]
+
+
+1.5.2 - released August 13, 2009
+
+- Fix broken release.
+  [davisagli]
+
+1.5.1 - released August 12, 2009
+
+- Fix for issue #13, whereby hitting the next button while editing a
+  Salesforce Adapter with PloneFormGen 1.5b2 redirected off to the Form 
+  Folder's Quick Edit UI, rather than the field mapping UI as expected.
   [andrewb]
 
 1.5  - released February 18, 2009

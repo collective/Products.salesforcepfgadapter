@@ -6,7 +6,6 @@ import os, sys
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
-from zope.interface import providedBy
 from Products.CMFCore.utils import getToolByName
 
 from Products.Archetypes.public import DisplayList
@@ -275,7 +274,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.assertTrue(IMultiPageSchema.providedBy(sf))
     
     def testNoExtraneousSchemata(self):
-        from Products.Archetypes.interfaces import IMultiPageSchema
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         sfSchema = self.ff1.salesforce.schema
         self.assertEquals(['default', 'field mapping', 'overrides'], sfSchema.getSchemataNames())
@@ -308,8 +306,12 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.onSuccess(fields, request)
         
         # direct query of Salesforce to get the id of the newly created contact
-        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
-                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
+        res = self.salesforce.query(
+            "SELECT Id FROM %s WHERE Email='%s' AND LastName='%s'" % (
+                self.ff1.contact_adapter.getSFObjectType(),
+                'plonetestcase@plone.org',
+                'PloneTestCase')
+            )
         self._todelete.append(res['records'][0]['Id'])
         
         # assert that our newly created Contact was found
@@ -353,16 +355,22 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.account_adapter.onSuccess(fields, request)        
         
         # direct query of Salesforce to get the id of the newly created contact
-        contact_res = self.salesforce.query(['Id',],
-                                            self.ff1.contact_adapter.getSFObjectType(),
-                                            "Email='plonetestcase1ToN@plone.org' and LastName='PloneTestCase1ToN'")
+        contact_res = self.salesforce.query(
+            "SELECT Id FROM %s WHERE Email='%s' AND LastName='%s'" % (
+                self.ff1.contact_adapter.getSFObjectType(),
+                'plonetestcase1ToN@plone.org',
+                'PloneTestCase1ToN')
+            )
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(contact_res['records'][0]['Id'])
         
         # direct query of Salesforce to get the id of the newly created account
-        account_res = self.salesforce.query(['Id',],self.ff1.account_adapter.getSFObjectType(),
-                                    "Name='PloneTestCase1ToN'")
-                                    
+        account_res = self.salesforce.query(
+            "SELECT Id FROM %s WHERE Name='%s'" % (
+                self.ff1.account_adapter.getSFObjectType(),
+                'PloneTestCase1ToN')
+            )
+
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(account_res['records'][0]['Id'])
         
@@ -438,9 +446,11 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.onSuccess(fields, request)        
         
         # direct query of Salesforce to get the id of the newly created contact
-        contact_res = self.salesforce.query(['Id','FirstName'],
-                                            self.ff1.contact_adapter.getSFObjectType(),
-                                            "LastName='PloneTestCaseFieldsetFields'")
+        contact_res = self.salesforce.query(
+            "SELECT Id, FirstName FROM %s WHERE LastName='%s'" % (
+                self.ff1.contact_adapter.getSFObjectType(),
+                'PloneTestCaseFieldsetFields')
+            )
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(contact_res['records'][0]['Id'])
         
@@ -555,9 +565,10 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.attachment_adapter.onSuccess(fields, request)  
         
         # query for our attachment
-        attach_res = self.salesforce.query(['Id','Name','BodyLength',],
-                                            'Attachment',
-                                            "ParentId='%s'" % contact_create_res[0]['id'])
+        attach_res = self.salesforce.query(
+            "SELECT Id, Name, BodyLength FROM Attachment WHERE ParentId='%s'" % (
+                contact_create_res[0]['id'])
+            )
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(attach_res['records'][0]['Id'])
         
@@ -605,9 +616,10 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.lead_adapter.onSuccess(fields, request)  
         
         # query for our attachment
-        lead_res = self.salesforce.query(['Id','NumberOfEmployees'],
-                                          'Lead',
-                                          "LastName='PloneTestCaseEmptyIntegerField'")
+        lead_res = self.salesforce.query(
+            "SELECT Id, NumberOfEmployees FROM Lead WHERE LastName='%s'" % (
+                'PloneTestCaseEmptyIntegerField')
+            )
 
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(lead_res['records'][0]['Id'])
