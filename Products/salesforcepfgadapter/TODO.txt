@@ -1,5 +1,8 @@
 TODO.txt
 
+- guard against SOQL injection
+- figure out the correct session key
+
 1.5+ - Future ideas
 
 - write test for preset value map

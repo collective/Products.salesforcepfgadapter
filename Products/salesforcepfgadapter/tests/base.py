@@ -63,14 +63,17 @@ class SalesforcePFGAdapterTestCase(ptc.PloneTestCase):
         self._todelete = list() # keep track of ephemeral test data to delete
     
 
-class BaseSalesforcePFGAdapterFunctionalTestCase(ptc.FunctionalTestCase):
+class SalesforcePFGAdapterFunctionalTestCase(ptc.FunctionalTestCase):
     """Base class for functional doctests
     """
     def afterSetUp(self):
+        ztc.utils.setupCoreSessions(self.app)
+        
+        self.salesforce = self.portal.portal_salesforcebaseconnector
         self._todelete = list() # keep track of ephemeral test data to delete
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
-    
+
 
 class FakeRequest(dict):
 

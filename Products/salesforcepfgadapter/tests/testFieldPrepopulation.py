@@ -12,7 +12,7 @@ from Products.Archetypes.event import ObjectEditedEvent
 from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.prepopulator import FieldValueRetriever
 
-class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
+class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
     
     def afterSetUp(self):
@@ -41,31 +41,36 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
                 ids = ids[200:]
             self.salesforce.delete(ids)
 
-    def testPrepopulateSettingAvailability(self):
+    def testSavingAdapterSetsFieldDefaults(self):
         """
-        The 'prepopulate fields' setting should only take effect if:
-         - the creation mode is set to update or upsert
-         - a primary key field is configured
+        A field should get its default override set to "object/@@sf_value" if
+        and only if:
+         - the creation mode is set to update
+         - the update match expression is non-empty
         """
-        self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('creation')
-        self.sfa.setPrepopulateFieldValues(True)
-        notify(ObjectEditedEvent(self.sfa))
-        
-        self.assertEqual(self.ff1.replyto.getRawFgTDefault(), '')
-
-    def testPrepopulateSettingSetsFieldDefaults(self):
+        # all three conditions are met
         self.sfa.setSFObjectType('Contact')
         self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('upsert')
-        self.sfa.setPrimaryKeyField('ContactId')
-        self.sfa.setPrepopulateFieldValues(True)
+        self.sfa.setCreationMode('update')
+        self.sfa.setUpdateMatchExpression('string:foobar')
         notify(ObjectEditedEvent(self.sfa))
-        
         default_expr = self.ff1.replyto.getRawFgTDefault()
         self.assertEqual(default_expr, 'object/@@sf_value')
-    
-    def testPrepopulateSettingSetsFieldDefaultsForFieldsInFieldsets(self):
+        
+        # wrong creation mode
+        self.sfa.setCreationMode('create')
+        notify(ObjectEditedEvent(self.sfa))
+        default_expr = self.ff1.replyto.getRawFgTDefault()
+        self.assertEqual(default_expr, '')
+        
+        # no update match expression
+        self.sfa.setCreationMode('update')
+        self.sfa.setUpdateMatchExpression('')
+        notify(ObjectEditedEvent(self.sfa))
+        default_expr = self.ff1.replyto.getRawFgTDefault()
+        self.assertEqual(default_expr, '')
+
+    def testSavingAdapterSetsFieldDefaultsForFieldsInFieldsets(self):
         self.ff1.invokeFactory('FieldsetFolder', 'fieldset')
         fieldset = self.ff1.fieldset
         fieldset.invokeFactory('FormStringField', 'foo')
@@ -73,36 +78,22 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterTestCase):
         
         self.sfa.setSFObjectType('Contact')
         self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('upsert')
-        self.sfa.setPrimaryKeyField('ContactId')
-        self.sfa.setPrepopulateFieldValues(True)
+        self.sfa.setCreationMode('update')
+        self.sfa.setUpdateMatchExpression('string:foobar')
         notify(ObjectEditedEvent(self.sfa))
         
         default_expr = self.ff1.fieldset.foo.getRawFgTDefault()
         self.assertEqual(default_expr, 'object/@@sf_value')
     
-    def testClearingPrepopulateSettingClearsFieldDefaults(self):
-        self.ff1.replyto.setFgTDefault('object/@@sf_value')
+    def testRemovingDefaultExpressionDoesntPurgeCustomizedFieldDefaults(self):
+        self.ff1.replyto.setFgTDefault('string:foobar')
         self.ff1.pet.setFgTDefault('Mittens')
         self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('upsert')
-        self.sfa.setPrimaryKeyField('ContactId')
-        self.sfa.setPrepopulateFieldValues(False)
+        self.sfa.setCreationMode('update')
+        self.sfa.setUpdateMatchExpression('')
         notify(ObjectEditedEvent(self.sfa))
         
-        self.assertEqual(self.ff1.replyto.getRawFgTDefault(), '')
-        self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
-    
-    def testPrepopulateSettingDoesntPurgeCustomizedFieldDefaults(self):
-        self.ff1.replyto.setFgTDefault('foobar')
-        self.ff1.pet.setFgTDefault('Mittens')
-        self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('upsert')
-        self.sfa.setPrimaryKeyField('ContactId')
-        self.sfa.setPrepopulateFieldValues(False)
-        notify(ObjectEditedEvent(self.sfa))
-        
-        self.assertEqual(self.ff1.replyto.getRawFgTDefault(), 'foobar')
+        self.assertEqual(self.ff1.replyto.getRawFgTDefault(), 'string:foobar')
         self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
     
 
@@ -117,10 +108,6 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         self.lastname = self.ff1.lastname
         self.lastname.setTitle('Last Name')
         
-        # this is the value we're going to key on for populating the fields
-        self.ff1.replyto.setFgDefault('archimedes@doe.com')
-        self.ff1.replyto.setFgTDefault('')
-
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         self.sfa = getattr(self.ff1, 'salesforce')
         self.test_fieldmap = (
@@ -128,9 +115,8 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
             dict(field_path='replyto', form_field='Your E-Mail Address', sf_field='Email'),
             )
         self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('upsert')
-        self.sfa.setPrimaryKeyField('Email')
-        self.sfa.setPrepopulateFieldValues(True)
+        self.sfa.setCreationMode('update')
+        self.sfa.setUpdateMatchExpression("string:Email='archimedes@doe.com'")
         notify(ObjectEditedEvent(self.sfa))
         
         self._todelete = []
@@ -172,13 +158,13 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         data = retriever.retrieveData()
-        self.assertEqual(data, {
-            'replyto': 'archimedes@doe.com',
-            'lastname': 'Doe',
-            })
+        self.assertEqual(data['replyto'], 'archimedes@doe.com')
+        self.assertEqual(data['lastname'], 'Doe')
+        self.failUnless('Id' in data)
+        self.assertEqual(len(data.keys()), 3)
     
     def testRetrieveDataNothingFound(self):
-        self.ff1.replyto.setFgDefault('not-a-real-email')
+        self.sfa.setUpdateMatchExpression("string:Email='not-a-real-email'")
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         data = retriever.retrieveData()
         self.assertEqual(data, {})
@@ -201,7 +187,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
         self._createTestContact()
         self._createTestContact()
         # Since there is not a single record with this last name, we should
-        # raise and exception
+        # raise an exception
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         self.assertRaises(Exception, retriever.retrieveData)
     

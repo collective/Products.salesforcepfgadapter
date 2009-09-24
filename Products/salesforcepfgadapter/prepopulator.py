@@ -27,8 +27,7 @@ class FieldValueRetriever(BrowserView):
             setattr(self.request, config.REQUEST_KEY, data)
             if 'Id' in data:
                 formkey = self.form.UID()
-                self.request.SESSION.set(config.SESSION_KEY, 
-                                         {formkey:data['Id']})
+                self.request.SESSION[(config.SESSION_KEY, formkey)] = data['Id']
             
         field_path = self.getFieldPath()
         return data.get(field_path, None)
@@ -39,20 +38,8 @@ class FieldValueRetriever(BrowserView):
             return {}
         
         sObjectType = sfa.getSFObjectType()
-        sf_key_field = sfa.getPrimaryKeyField()
+        updateMatchExpression = sfa.getUpdateMatchExpression()
         mappings = sfa.getFieldMap()
-
-        # determine the key value
-        key_field_path = None
-        for m in mappings:
-            if m['sf_field'] == sf_key_field:
-                key_field_path = m['field_path']
-                break
-        if key_field_path is None:
-            return {}
-        key_field = self.form.restrictedTraverse(key_field_path.replace(',', '/'))
-        key_field.fgPrimeDefaults(self.request)
-        key_value = getattr(self.request, key_field.__name__)
 
         # determine which fields to retrieve
         fieldList = [m['sf_field'] for m in mappings if m['sf_field']]
@@ -60,7 +47,8 @@ class FieldValueRetriever(BrowserView):
         fieldList.append('Id')
 
         sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
-        res = sfbc.query(fieldList, sObjectType, "%s='%s'" % (sf_key_field, key_value))
+        query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
+        res = sfbc.query(query)
         if not len(res['records']):
             return {}
         if len(res['records']) > 1:

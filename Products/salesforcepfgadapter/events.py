@@ -4,7 +4,6 @@ from Products.Archetypes.interfaces import IObjectEditedEvent
 
 from Products.salesforcepfgadapter import interfaces
 
-UPSERT_MODE = 'upsert'
 SF_VIEW = 'object/@@sf_value'
 PFG_EMAIL_DEFAULT = 'here/memberEmail'
 
@@ -16,10 +15,9 @@ def _safe_to_override(field):
 
 def _set_default(sf_adapter, new_default):
     form_folder = aq_parent(sf_adapter)
-    sf_key_field = sf_adapter.getPrimaryKeyField()
     mappings = sf_adapter.getFieldMap()
     for m in mappings:
-        if 'sf_field' in m and m['sf_field'] != sf_key_field:
+        if 'sf_field' in m:
             field_path = m['field_path'].replace(',', '/')
             field = form_folder.restrictedTraverse(field_path)
             if _safe_to_override(field):
@@ -28,9 +26,8 @@ def _set_default(sf_adapter, new_default):
 def _sf_defaults_activated(sf_adapter):
     # if we're upserting and prepopulating, we're active
     # TODO: simplify to just return  sf_adapter.getPrepopulateFieldValues()
-    return sf_adapter.getCreationMode() == UPSERT_MODE and \
-                sf_adapter.getPrepopulateFieldValues()
-
+    return sf_adapter.getCreationMode() == 'update' and \
+        sf_adapter.getRawUpdateMatchExpression()
 
 @adapter(interfaces.ISalesforcePFGAdapter, IObjectEditedEvent)
 def handle_adapter_saved(sf_adapter, event):
@@ -39,8 +36,5 @@ def handle_adapter_saved(sf_adapter, event):
     """
     if _sf_defaults_activated(sf_adapter):
         _set_default(sf_adapter, SF_VIEW)
-        return
-    
-    _set_default(sf_adapter, '')
-    return
-
+    else:
+        _set_default(sf_adapter, '')

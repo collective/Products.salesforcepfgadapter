@@ -6,14 +6,9 @@ import os, sys
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
-from zope.interface import providedBy
-from Products.CMFCore.utils import getToolByName
-
 from Products.Archetypes.public import DisplayList
 
 from Products.PloneFormGen.interfaces import IPloneFormGenField
-
-from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
 from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.config import REQUIRED_MARKER
@@ -275,10 +270,9 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.assertTrue(IMultiPageSchema.providedBy(sf))
     
     def testNoExtraneousSchemata(self):
-        from Products.Archetypes.interfaces import IMultiPageSchema
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         sfSchema = self.ff1.salesforce.schema
-        self.assertEquals(['default', 'field mapping', 'mode', 'overrides'], sfSchema.getSchemataNames())
+        self.assertEquals(['default', 'field mapping', 'create vs. update', 'overrides'], sfSchema.getSchemataNames())
     
     def testSalesforceAdapterOnSuccess(self):
         """Ensure that our Salesforce Adapter mapped objects

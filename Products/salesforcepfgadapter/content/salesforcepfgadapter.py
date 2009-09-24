@@ -26,8 +26,7 @@ from Products.CMFCore.Expression import getExprContext
 # Plone imports
 from Products.CMFPlone.utils import safe_hasattr
 from Products.Archetypes.public import StringField, StringWidget, \
-    SelectionWidget, BooleanField, BooleanWidget, DisplayList, Schema, \
-    ManagedSchema
+    SelectionWidget, DisplayList, Schema, ManagedSchema
 
 from Products.ATContentTypes.content.base import registerATCT, ATCTContent
 from Products.CMFCore.permissions import View, ModifyPortalContent
@@ -40,6 +39,9 @@ from Products.DataGridField.SelectColumn import SelectColumn
 from Products.DataGridField.FixedColumn import FixedColumn
 from Products.DataGridField.Column import Column
 from Products.DataGridField.DataGridField import FixedRow
+
+# TALESField
+from Products.TALESField import TALESString
 
 # Interfaces
 from Products.PloneFormGen.interfaces import IPloneFormGenField
@@ -147,66 +149,63 @@ schema = FormAdapterSchema.copy() + Schema((
              ),
          validators = ('CircularDependencyValidator',),
          ),
+
     StringField(
         'creationMode',
-        schemata="mode",
+        schemata="create vs. update",
         required=True,
         searchable=False,
         vocabulary=DisplayList((
-            ('create', 'create - Always add a new object.'),
-            ('upsert', 'upsert - Update an existing object if a key field matches; otherwise add a new one.'),
-            ('update', 'update - Update an existing object if a key field matches; otherwise fail.')
+            ('create', _(u'create - Always add a new object to Salesforce.')),
+            ('update', _(u'update - Update an existing object in Salesforce.')),
             )),
         default='create',
         widget=SelectionWidget(
             label=_(u'Creation Mode'),
             description=_(u'Select which action should be performed when the form containing this adapter is submitted.'),
             format="radio",
+            ),
          ),
-    ),
-    
-    StringField(
-        'primaryKeyField',
-        schemata="mode",
-        required=False,
-        searchable=False,
-        vocabulary='getMappedSFFields',
-        # default="contact_id",
-        widget=SelectionWidget(
-            label=_(u"Salesforce primary key field"),
-            description=_(u"Salesforce field to be used to match an existing record."),
-         ),
-    ),
-    
-    BooleanField(
-        'prepopulateFieldValues',
-        schemata="mode",
-        required=False,
-        default=False,
-        widget=BooleanWidget(
-            label=_(u"Prepopulate field values on form load"),
-            description=_(u"If selected, the form will prefill existing values from an object in Salesforce when it is loaded.  The object will be found by matching the primary key field expression, and fields will be filled based on the field mapping.  Has no effect when the creation mode is set to 'create'.")
-        ),
-    ),
 
-    StringField(
-        'primaryKeyFieldDefaultExpression',
-        schemata="mode",
+    TALESString(
+        'updateMatchExpression',
+        schemata="create vs. update",
         required=False,
         searchable=False,
         default="",
+        validators=('talesvalidator',),
         widget=StringWidget(
             label=_(u"Primary key field default expression"),
-            description=_(u"Placeholder for now. Will be a TALES expression."),
-         ),
-    ),    
-    
+            description=_(u"Enter a TALES expression which evaluates to a SOQL WHERE clause that returns the "
+                          u"Salesforce.com object you want to update.  For example, "
+                          u"string:Username__c='${member/getId}'"),
+                          # XXX elaborate on help text
+            ),
+        ),
+
+    StringField(
+        'actionIfNoExistingObject',
+        schemata="create vs. update",
+        required=True,
+        searchable=False,
+        widget = SelectionWidget(
+            label = _(u'Behavior if no existing object found'),
+            description = _(u'If this adapter tries to update an existing object using the above expression, '
+                            u'but no object is found, what should happen?'),
+            ),
+        vocabulary = DisplayList((
+            ('create', _(u'Create a new object instead.')),
+            ('abort', _(u'Fail with an error message.')),
+            )),
+        default = 'abort',
+        ),
+
 ))
 
 # move 'field mapping' schemata before the inherited overrides schemata
 schema = ManagedSchema(schema.copy().fields())
 schema.moveSchemata('field mapping', -1)
-schema.moveSchemata('mode', -1)
+schema.moveSchemata('create vs. update', -1)
 
 class SalesforcePFGAdapter(FormActionAdapter):
     """ An adapter for PloneFormGen that saves results to Salesforce.
@@ -270,18 +269,16 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     for mapping in adapter.getPresetValueMap():
                         sObject[mapping['sf_field']] = mapping['value']
                         
-                    if self.getCreationMode() == 'upsert':
+                    if self.getCreationMode() == 'update':
                         # get the user's SF UID from the session
-                        form_id = aq_parent(self).UID()
-                        # completely reckless for now...
                         uid = self._userIdToUpdate()
                         if uid:
                             sObject['Id'] = uid
                             result = salesforce.update(sObject)[0]
-                            self._clearSession(form_id)
+                            self._clearSession()
                         else:
-                            sf_primary_key = self.getPrimaryKeyField()
-                            result = salesforce.upsert(sf_primary_key, sObject)[0]
+                            # xxx logic for what to do if no object found
+                            return
                     else: # create
                         result = salesforce.create(sObject)[0]
                     
@@ -299,16 +296,18 @@ class SalesforcePFGAdapter(FormActionAdapter):
     
     def _userIdToUpdate(self):
         form_id = aq_parent(self).UID()
-        session = self.REQUEST.SESSION
-        if config.SESSION_KEY in session and form_id in session[config.SESSION_KEY]:
-            return session[config.SESSION_KEY][form_id]
+        try:
+            return self.REQUEST.SESSION[(config.SESSION_KEY, form_id)]
+        except KeyError:
+            return None
     
-        return None
-    
-    def _clearSession(self, form_id):
+    def _clearSession(self):
+        form_id = aq_parent(self).UID()
         session = self.REQUEST.SESSION
-        if config.SESSION_KEY in session and form_id in session[config.SESSION_KEY]:
-            del(session[config.SESSION_KEY][form_id])
+        try:
+            del session[(config.SESSION_KEY, form_id)]
+        except KeyError:
+            pass
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form

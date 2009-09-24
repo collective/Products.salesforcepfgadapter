@@ -26,10 +26,11 @@ setup(name='Products.salesforcepfgadapter',
       zip_safe=False,
       install_requires=[
           'setuptools',
-          'beatbox>=0.9,<=1.0dev',
+          'beatbox>=0.9',
           'Products.salesforcebaseconnector',
           'Products.PloneFormGen',
           'Products.DataGridField',
+          'Products.TALESField',
           # -*- Extra requirements: -*-
       ],
       entry_points="""
