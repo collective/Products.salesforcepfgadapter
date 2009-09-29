@@ -8,10 +8,14 @@ SF_VIEW = 'object/@@sf_value'
 PFG_EMAIL_DEFAULT = 'here/memberEmail'
 
 def _safe_to_override(field):
-    if field.getRawFgTDefault() == PFG_EMAIL_DEFAULT:
-        return True
-    return not field.getRawFgTDefault() or \
-        field.getRawFgTDefault() == SF_VIEW
+    if hasattr(field, 'getRawFgTDefault'):
+        if field.getRawFgTDefault() == PFG_EMAIL_DEFAULT:
+            return True
+        return not field.getRawFgTDefault() or \
+            field.getRawFgTDefault() == SF_VIEW
+    else:
+        # TODO: for label fields is it OK to allow override?
+        return False  
 
 def _set_default(sf_adapter, new_default):
     form_folder = aq_parent(sf_adapter)

@@ -85,6 +85,20 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         default_expr = self.ff1.fieldset.foo.getRawFgTDefault()
         self.assertEqual(default_expr, 'object/@@sf_value')
     
+    def testLabelFieldsDoNotBreak(self):
+        self.ff1.invokeFactory('FieldsetFolder', 'fieldset')
+        fieldset = self.ff1.fieldset
+        fieldset.invokeFactory('FormLabelField', 'foo')
+        fieldset_field = fieldset.foo
+        
+        self.sfa.setSFObjectType('Contact')
+        self.sfa.setFieldMap(self.test_fieldmap)
+        self.sfa.setCreationMode('upsert')
+        self.sfa.setPrimaryKeyField('ContactId')
+        self.sfa.setPrepopulateFieldValues(True)
+        notify(ObjectEditedEvent(self.sfa))
+        self.assertEqual(True, True ) # really great, but if it gets here it worked... 
+    
     def testRemovingDefaultExpressionDoesntPurgeCustomizedFieldDefaults(self):
         self.ff1.replyto.setFgTDefault('string:foobar')
         self.ff1.pet.setFgTDefault('Mittens')
