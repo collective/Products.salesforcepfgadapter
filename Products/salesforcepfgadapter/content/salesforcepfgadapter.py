@@ -277,12 +277,14 @@ class SalesforcePFGAdapter(FormActionAdapter):
                             result = salesforce.update(sObject)[0]
                             self._clearSession()
                         else:
-                            # xxx logic for what to do if no object found
-                            return
+                            if self.getActionIfNoExistingObject() == 'create':
+                                result = salesforce.create(sObject)[0]
+                            else:
+                                raise Exception('Existing object not found.')
                     else: # create
                         result = salesforce.create(sObject)[0]
-                    
 
+                    # xxx update logging messages
                     if result['success']:
                         logger.debug("Successfully created new %s %s in Salesforce" % \
                                      (adapter.SFObjectType, result['id']))

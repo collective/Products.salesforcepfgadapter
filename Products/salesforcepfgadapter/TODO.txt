@@ -1,7 +1,8 @@
 TODO.txt
 
-- guard against SOQL injection
 - figure out the correct session key
+- fix onSuccess logging messages
+- chained adapter scenarios
 
 1.5+ - Future ideas
 

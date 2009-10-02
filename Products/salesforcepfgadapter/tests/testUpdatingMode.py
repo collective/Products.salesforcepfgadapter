@@ -44,6 +44,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         
         # remove the default replyto field default expression
         self.ff1.replyto.setFgTDefault('')
+        self.ff1.replyto.setFgDefault('')
         
         # configure our action adapter to create a contact on submission
         # last name is the lone required field
@@ -112,6 +113,41 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
             self._todelete.append(item['Id'])
         self.assertEqual(1, res['size'])
         self.assertEqual('PloneTestCaseChanged', res['records'][0]['LastName'])
+
+    def testUpdateModeCreateIfNoMatch(self):
+        self.app.REQUEST['SESSION'] = FakeRequestSession()
+        
+        # make sure there's no existing matching contact
+        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
+        self.assertEqual(0, res['size'])
+
+        # set mode to 'update'
+        self.ff1.contact_adapter.setCreationMode('update')
+        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
+        self.ff1.contact_adapter.setActionIfNoExistingObject('create')
+        notify(ObjectEditedEvent(self.ff1.contact_adapter))
+        
+        # open a test browser on the initial form
+        browser = Browser()
+        browser.handleErrors = False
+        browser.open('http://nohost/plone/ff1')
+        
+        # confirm no existing values; set some new ones and submit
+        self.assertEqual(browser.getControl(name='replyto').value, '')
+        browser.getControl(name='replyto').value = 'plonetestcase@plone.org'
+        self.assertEqual(browser.getControl(name='comments').value, '')
+        browser.getControl(name='comments').value = 'PloneTestCase'
+        browser.getControl('Submit').click()
+        
+        # now there should be one (new) record
+        res = self.salesforce.query(['Id','LastName'],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org'")
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
+        self.assertEqual('PloneTestCase', res['records'][0]['LastName'])
+
 
     # def testUpsertWithNoMatchingRecord(self):
     #     """Ensure that our Salesforce Adapter mapped objects
