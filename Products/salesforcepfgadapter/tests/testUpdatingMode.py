@@ -28,6 +28,12 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.objid = id = res[0]['id']
         self._todelete.append(id)
     
+    def _assertNoExistingTestContact(self):
+        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
+        self.assertEqual(0, res['size'], 'PloneTestCase contact already present in database.  Please '
+                                         'remove it before running the tests.')
+
     def afterSetUp(self):
         super(TestUpdateModes, self).afterSetUp()
         self.setRoles(['Manager'])
@@ -54,7 +60,8 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.ff1.manage_delObjects(['topic'])
         
         self.portal.portal_workflow.doActionFor(self.ff1, 'publish')
-
+        
+        self.app.REQUEST['SESSION'] = FakeRequestSession()
     
     def beforeTearDown(self):
         """clean up SF data"""
@@ -70,8 +77,6 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
            find their way into the appropriate Salesforce.com
            instance.
         """
-        self.app.REQUEST['SESSION'] = FakeRequestSession()
-        
         # first create a new contact - build the request and submit the form
         fields = self.ff1._getFieldObjects()
         request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
@@ -113,12 +118,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.assertEqual('PloneTestCaseChanged', res['records'][0]['LastName'])
 
     def testUpdateModeCreateIfNoMatch(self):
-        self.app.REQUEST['SESSION'] = FakeRequestSession()
-        
-        # make sure there's no existing matching contact
-        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
-                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
-        self.assertEqual(0, res['size'])
+        self._assertNoExistingTestContact()
 
         # set mode to 'update', actionIfNoExistingObject to 'create'
         self.ff1.contact_adapter.setCreationMode('update')
@@ -147,12 +147,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.assertEqual('PloneTestCase', res['records'][0]['LastName'])
 
     def testUpdateModeAbortIfNoMatch(self):
-        self.app.REQUEST['SESSION'] = FakeRequestSession()
-        
-        # make sure there's no existing matching contact
-        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
-                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
-        self.assertEqual(0, res['size'])
+        self._assertNoExistingTestContact()
 
         # set mode to 'update', actionIfNoExistingObject to 'abort'
         self.ff1.contact_adapter.setCreationMode('update')
