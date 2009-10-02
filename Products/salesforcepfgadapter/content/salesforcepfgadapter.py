@@ -175,11 +175,11 @@ schema = FormAdapterSchema.copy() + Schema((
         default="",
         validators=('talesvalidator',),
         widget=StringWidget(
-            label=_(u"Primary key field default expression"),
+            label=_(u"Expression to match existing object for update"),
             description=_(u"Enter a TALES expression which evaluates to a SOQL WHERE clause that returns the "
-                          u"Salesforce.com object you want to update.  For example, "
-                          u"string:Username__c='${member/getId}'"),
-                          # XXX elaborate on help text
+                          u"Salesforce.com object you want to update.  If you interpolate input from the request "
+                          u"into single quotes in the SOQL statement, be sure to escape it using the sanitize_soql "
+                          u"method. For example, python:\"Username__c='\" + sanitize_soql(request['username']) + \"'\""),
             ),
         ),
 

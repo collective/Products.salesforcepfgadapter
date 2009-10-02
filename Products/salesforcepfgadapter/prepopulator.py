@@ -2,8 +2,15 @@ from Acquisition import aq_inner, aq_parent
 from zope.component import adapts
 from Products.PloneFormGen.interfaces import IPloneFormGenForm, IPloneFormGenField
 from Products.Five import BrowserView
+from Products.CMFCore.Expression import getExprContext
 from Products.CMFCore.utils import getToolByName
 from Products.salesforcepfgadapter import config
+
+def sanitize_soql(s):
+    """ Sanitizes a string that will be interpolated into single quotes
+        in a SOQL expression.
+    """
+    return s.replace("'", "\\'")
 
 class FieldValueRetriever(BrowserView):
     """
@@ -38,7 +45,9 @@ class FieldValueRetriever(BrowserView):
             return {}
         
         sObjectType = sfa.getSFObjectType()
-        updateMatchExpression = sfa.getUpdateMatchExpression()
+        econtext = getExprContext(sfa)
+        econtext.vars['sanitize_soql'] = sanitize_soql
+        updateMatchExpression = sfa.getUpdateMatchExpression(expression_context = econtext)
         mappings = sfa.getFieldMap()
 
         # determine which fields to retrieve

@@ -24,11 +24,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
                                'sf_field' : 'Favorite_Pet__c'},)
         
         super(TestFieldPrepopulationSetting, self).afterSetUp()
-        self.folder.invokeFactory('FormFolder', 'ff1')
-        self.ff1 = getattr(self.folder, 'ff1')
-        
         self.ff1.invokeFactory('FormStringField', 'pet')
-        
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         self.sfa = getattr(self.ff1, 'salesforce')
 
@@ -93,11 +89,9 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         
         self.sfa.setSFObjectType('Contact')
         self.sfa.setFieldMap(self.test_fieldmap)
-        self.sfa.setCreationMode('upsert')
-        self.sfa.setPrimaryKeyField('ContactId')
-        self.sfa.setPrepopulateFieldValues(True)
+        self.sfa.setCreationMode('update')
+        self.sfa.setUpdateMatchExpression('string:foobar')
         notify(ObjectEditedEvent(self.sfa))
-        self.assertEqual(True, True ) # really great, but if it gets here it worked... 
     
     def testRemovingDefaultExpressionDoesntPurgeCustomizedFieldDefaults(self):
         self.ff1.replyto.setFgTDefault('string:foobar')
@@ -111,13 +105,11 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
     
 
-class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
+class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
 
     def afterSetUp(self):
         super(TestFieldValueRetriever, self).afterSetUp()
-        self.folder.invokeFactory('FormFolder', 'ff1')
-        self.ff1 = getattr(self.folder, 'ff1')
         self.ff1.invokeFactory('FormStringField', 'lastname')
         self.lastname = self.ff1.lastname
         self.lastname.setTitle('Last Name')
@@ -130,7 +122,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
             )
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
-        self.sfa.setUpdateMatchExpression("string:Email='archimedes@doe.com'")
+        self.sfa.setUpdateMatchExpression("""python:"Email='" + sanitize_soql('archimedes@doe.com') + "'" """)
         notify(ObjectEditedEvent(self.sfa))
         
         self._todelete = []
@@ -185,6 +177,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterTestCase):
     
     def testCallingMultipleRetrieversInARequestCaches(self):
         self._createTestContact()
+        self.app.REQUEST.SESSION = {}
         
         retriever = FieldValueRetriever(self.ff1.replyto, self.app.REQUEST)
         lastname = retriever()
