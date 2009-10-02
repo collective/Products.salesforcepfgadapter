@@ -1,10 +1,13 @@
+from zExceptions import Redirect
 from Acquisition import aq_inner, aq_parent
-from zope.component import adapts
+from zope.component import adapts, getMultiAdapter
 from Products.PloneFormGen.interfaces import IPloneFormGenForm, IPloneFormGenField
 from Products.Five import BrowserView
 from Products.CMFCore.Expression import getExprContext
 from Products.CMFCore.utils import getToolByName
+from Products.statusmessages.interfaces import IStatusMessage
 from Products.salesforcepfgadapter import config
+from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
 
 def sanitize_soql(s):
     """ Sanitizes a string that will be interpolated into single quotes
@@ -59,7 +62,15 @@ class FieldValueRetriever(BrowserView):
         query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
         res = sfbc.query(query)
         if not len(res['records']):
-            return {}
+            mtool = getToolByName(self.context, 'portal_membership')
+            if sfa.getActionIfNoExistingObject() == 'abort' and not mtool.checkPermission('Modify portal content', self.form):
+                # show a message at the portal root, unless this user has permission
+                # to edit the form
+                portal_url = getMultiAdapter((self.context, self.request), name=u'plone_portal_state').portal_url()
+                IStatusMessage(self.request).addStatusMessage(_(u'Could not find item to edit.'))
+                raise Redirect(portal_url)
+            else:
+                return {}
         if len(res['records']) > 1:
             raise Exception('Multiple records found; you must use a unique key.')
 
