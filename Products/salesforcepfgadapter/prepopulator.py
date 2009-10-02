@@ -58,21 +58,28 @@ class FieldValueRetriever(BrowserView):
         # we always want the ID
         fieldList.append('Id')
 
+        # find existing item
         sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
         query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
         res = sfbc.query(query)
+        error_msg = ''
         if not len(res['records']):
-            mtool = getToolByName(self.context, 'portal_membership')
-            if sfa.getActionIfNoExistingObject() == 'abort' and not mtool.checkPermission('Modify portal content', self.form):
-                # show a message at the portal root, unless this user has permission
-                # to edit the form
-                portal_url = getMultiAdapter((self.context, self.request), name=u'plone_portal_state').portal_url()
-                IStatusMessage(self.request).addStatusMessage(_(u'Could not find item to edit.'))
-                raise Redirect(portal_url)
-            else:
-                return {}
+            if sfa.getActionIfNoExistingObject() == 'abort':
+                error_msg = _(u'Could not find item to edit.')
         if len(res['records']) > 1:
-            raise Exception('Multiple records found; you must use a unique key.')
+            error_msg = _(u'Multiple items found; unable to determine which one to edit.')
+
+        # if we have an error condition, report it
+        if error_msg:
+            IStatusMessage(self.request).addStatusMessage(error_msg)
+            mtool = getToolByName(self.context, 'portal_membership')
+            if mtool.checkPermission('Modify portal content', self.form):
+                # user needs to be able to edit form
+                return {}
+            else:
+                # user shouldn't see form
+                portal_url = getMultiAdapter((self.context, self.request), name=u'plone_portal_state').portal_url()
+                raise Redirect(portal_url)
 
         data = {'Id':res['records'][0]['Id']}
         for m in mappings:
