@@ -23,10 +23,23 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         member = pr.addMember(id, pw, roles, properties={ 'username': id, 'email' : email })
         return member
     
-    def _createTestContact(self, data):
-        res = self.salesforce.create([data])
-        self.objid = id = res[0]['id']
-        self._todelete.append(id)
+    def _createTestContact(self):
+        # first create a new contact - build the request and submit the form
+        self.ff1.contact_adapter.setCreationMode('create')
+        fields = self.ff1._getFieldObjects()
+        request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
+                                   comments='PloneTestCase')            # mapped to LastName (see above)
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # direct query of Salesforce to get the id of the newly created contact
+        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
+        self._todelete.append(res['records'][0]['Id'])
+        
+        # assert that our newly created Contact was found
+        self.assertEqual(1, res['size'])
+        
+        self.ff1.contact_adapter.setCreationMode('update')
     
     def _assertNoExistingTestContact(self):
         res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
@@ -57,6 +70,10 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
             {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
+        self.ff1.contact_adapter.setCreationMode('update')
+        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
+        notify(ObjectEditedEvent(self.ff1.contact_adapter))
+        
         self.ff1.manage_delObjects(['topic'])
         
         self.portal.portal_workflow.doActionFor(self.ff1, 'publish')
@@ -77,26 +94,8 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
            find their way into the appropriate Salesforce.com
            instance.
         """
-        # first create a new contact - build the request and submit the form
-        fields = self.ff1._getFieldObjects()
-        request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
-                                   comments='PloneTestCase')            # mapped to LastName (see above)
-        
-        self.ff1.contact_adapter.onSuccess(fields, request)
-        
-        # direct query of Salesforce to get the id of the newly created contact
-        res = self.salesforce.query(['Id',],self.ff1.contact_adapter.getSFObjectType(),
-                                    "Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
-        self._todelete.append(res['records'][0]['Id'])
-        
-        # assert that our newly created Contact was found
-        self.assertEqual(1, res['size'])
-    
-        # set mode to 'update'
-        self.ff1.contact_adapter.setCreationMode('update')
-        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
-        notify(ObjectEditedEvent(self.ff1.contact_adapter))
-        
+        self._createTestContact()
+
         # open a test browser on the initial form
         browser = Browser()
         browser.open('http://nohost/plone/ff1')
@@ -119,9 +118,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
     def testUpdateModeCreateIfNoMatch(self):
         self._assertNoExistingTestContact()
 
-        # set mode to 'update', actionIfNoExistingObject to 'create'
-        self.ff1.contact_adapter.setCreationMode('update')
-        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
+        # set actionIfNoExistingObject to 'create'
         self.ff1.contact_adapter.setActionIfNoExistingObject('create')
         notify(ObjectEditedEvent(self.ff1.contact_adapter))
         
@@ -147,11 +144,8 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
     def testUpdateModeAbortIfNoMatch(self):
         self._assertNoExistingTestContact()
 
-        # set mode to 'update', actionIfNoExistingObject to 'abort'
-        self.ff1.contact_adapter.setCreationMode('update')
-        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
+        # set actionIfNoExistingObject to 'abort'
         self.ff1.contact_adapter.setActionIfNoExistingObject('abort')
-        notify(ObjectEditedEvent(self.ff1.contact_adapter))
         
         # open a test browser on the initial form ... should get redirected
         # to the site root with a portal message.
@@ -166,10 +160,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         # make sure the 'abort' setting of actionIfNoExistingObject is
         # respected even if the check on the initial form load was bypassed.
         # To test, we'll first load the form with the setting on 'create'...
-        self.ff1.contact_adapter.setCreationMode('update')
-        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
         self.ff1.contact_adapter.setActionIfNoExistingObject('create')
-        notify(ObjectEditedEvent(self.ff1.contact_adapter))
         browser = Browser()
         browser.open('http://nohost/plone/ff1')
         
@@ -183,10 +174,25 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.assertEqual(browser.url, 'http://nohost/plone')
         self.failUnless('Could not find item to edit.' in browser.contents)
     
-    def testUpdateWhenObjectFoundInitiallyGoesMissing(self):
-        # known UID: should get exception from Salesforce
-        pass
+    def testUpdateWhenObjectInitiallyFoundGoesMissing(self):
+        # create a contact and load it into the form...
+        self._createTestContact()
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        self.assertEqual(browser.getControl(name='comments').value, 'PloneTestCase')
         
+        # now manually remove the new contact from Salesforce
+        self.salesforce.delete(self._todelete[-1:])
+        
+        # on submission, the adapter will get a Id from the session and will try
+        # to update the object with that Id, but we'll get an exception from SF
+        # since the object no longer exists
+        try:
+            browser.getControl('Submit').click()
+        except:
+            self.assertEqual(self.portal.error_log.getLogEntries()[0]['value'],
+                'Failed to create new Contact in Salesforce: entity is deleted')
+
 def test_suite():
     from unittest import TestSuite, makeSuite
     suite = TestSuite()

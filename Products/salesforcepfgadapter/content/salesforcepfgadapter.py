@@ -296,7 +296,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     else:
                         errorStr = 'Failed to create new %s in Salesforce: %s' % \
                             (str(adapter.SFObjectType), result['errors'][0]['message'])
-                        raise errorStr
+                        raise Exception(errorStr)
                 else:
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
     
