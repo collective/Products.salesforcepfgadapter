@@ -66,6 +66,8 @@ class FieldValueRetriever(BrowserView):
         if not len(res['records']):
             if sfa.getActionIfNoExistingObject() == 'abort':
                 error_msg = _(u'Could not find item to edit.')
+            else:
+                return {}
         if len(res['records']) > 1:
             error_msg = _(u'Multiple items found; unable to determine which one to edit.')
 

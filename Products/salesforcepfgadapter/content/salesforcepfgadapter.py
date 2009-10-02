@@ -14,6 +14,7 @@ import logging
 # Zope imports
 from zope.interface import implements
 from AccessControl import ClassSecurityInfo
+from zExceptions import Redirect
 from Acquisition import aq_parent
 from zope.interface import classImplements
 from DateTime import DateTime
@@ -32,6 +33,7 @@ from Products.ATContentTypes.content.base import registerATCT, ATCTContent
 from Products.CMFCore.permissions import View, ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from Products.validation.config import validation
+from Products.statusmessages.interfaces import IStatusMessage
 
 # DataGridField
 from Products.DataGridField import DataGridField, DataGridWidget
@@ -280,7 +282,9 @@ class SalesforcePFGAdapter(FormActionAdapter):
                             if self.getActionIfNoExistingObject() == 'create':
                                 result = salesforce.create(sObject)[0]
                             else:
-                                raise Exception('Existing object not found.')
+                                error_msg = _(u'Could not find item to edit.')
+                                IStatusMessage(REQUEST).addStatusMessage(error_msg)
+                                raise Redirect(aq_parent(self).absolute_url())
                     else: # create
                         result = salesforce.create(sObject)[0]
 

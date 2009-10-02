@@ -99,7 +99,6 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         
         # open a test browser on the initial form
         browser = Browser()
-        browser.handleErrors = False
         browser.open('http://nohost/plone/ff1')
         
         # update the comments field
@@ -128,7 +127,6 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         
         # open a test browser on the initial form
         browser = Browser()
-        browser.handleErrors = False
         browser.open('http://nohost/plone/ff1')
         
         # confirm no existing values; set some new ones and submit
@@ -161,7 +159,34 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         browser.open('http://nohost/plone/ff1')
         self.assertEqual(browser.url, 'http://nohost/plone')
         self.failUnless('Could not find item to edit.' in browser.contents)
+    
+    def testUpdateModeAbortIfNoMatchOnDirectSubmission(self):
+        self._assertNoExistingTestContact()
 
+        # make sure the 'abort' setting of actionIfNoExistingObject is
+        # respected even if the check on the initial form load was bypassed.
+        # To test, we'll first load the form with the setting on 'create'...
+        self.ff1.contact_adapter.setCreationMode('update')
+        self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
+        self.ff1.contact_adapter.setActionIfNoExistingObject('create')
+        notify(ObjectEditedEvent(self.ff1.contact_adapter))
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        
+        # then switch it to 'abort' and submit the form...
+        self.ff1.contact_adapter.setActionIfNoExistingObject('abort')
+        browser.getControl(name='replyto').value = 'plonetestcase@plone.org'
+        browser.getControl(name='comments').value = 'PloneTestCase'
+        browser.getControl('Submit').click()
+        
+        # should end up on the portal root, with an error message
+        self.assertEqual(browser.url, 'http://nohost/plone')
+        self.failUnless('Could not find item to edit.' in browser.contents)
+    
+    def testUpdateWhenObjectFoundInitiallyGoesMissing(self):
+        # known UID: should get exception from Salesforce
+        pass
+        
 def test_suite():
     from unittest import TestSuite, makeSuite
     suite = TestSuite()
