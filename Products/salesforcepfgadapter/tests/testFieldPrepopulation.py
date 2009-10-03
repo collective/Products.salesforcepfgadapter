@@ -8,6 +8,7 @@ if __name__ == '__main__':
 
 from zope.event import notify
 from Products.Archetypes.event import ObjectEditedEvent
+from Products.statusmessages.interfaces import IStatusMessage
 
 from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.prepopulator import FieldValueRetriever
@@ -194,9 +195,11 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self._createTestContact()
         self._createTestContact()
         # Since there is not a single record with this last name, we should
-        # raise an exception
+        # show an error message
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
-        self.assertRaises(Exception, retriever.retrieveData)
+        retriever.retrieveData()
+        self.assertEqual(IStatusMessage(self.app.REQUEST).showStatusMessages()[0].message,
+            u'Multiple items found; unable to determine which one to edit.')
     
     def beforeTearDown(self):
         """clean up SF data"""

@@ -273,11 +273,17 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         
                     if self.getCreationMode() == 'update':
                         # get the user's SF UID from the session
-                        uid = self._userIdToUpdate()
+                        try:
+                            uid = self._userIdToUpdate()
+                        except KeyError:
+                            error_msg = _(u'Session expired. Unable to process form. Please try again.')
+                            IStatusMessage(REQUEST).addStatusMessage(error_msg)
+                            raise Redirect(aq_parent(self).absolute_url())
+                        self._clearSession()
+
                         if uid:
                             sObject['Id'] = uid
                             result = salesforce.update(sObject)[0]
-                            self._clearSession()
                         else:
                             if self.getActionIfNoExistingObject() == 'create':
                                 result = salesforce.create(sObject)[0]
@@ -302,10 +308,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
     
     def _userIdToUpdate(self):
         form_id = aq_parent(self).UID()
-        try:
-            return self.REQUEST.SESSION[(config.SESSION_KEY, form_id)]
-        except KeyError:
-            return None
+        return self.REQUEST.SESSION[(config.SESSION_KEY, form_id)]
     
     def _clearSession(self):
         form_id = aq_parent(self).UID()

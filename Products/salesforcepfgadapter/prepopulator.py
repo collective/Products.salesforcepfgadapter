@@ -35,13 +35,15 @@ class FieldValueRetriever(BrowserView):
         if data is None:
             data = self.retrieveData()
             setattr(self.request, config.REQUEST_KEY, data)
+            formkey = self.form.UID()
+            obj_id = None
             if 'Id' in data:
-                formkey = self.form.UID()
-                self.request.SESSION[(config.SESSION_KEY, formkey)] = data['Id']
-            
+                obj_id = data['Id']
+            self.request.SESSION[(config.SESSION_KEY, formkey)] = obj_id
+
         field_path = self.getFieldPath()
         return data.get(field_path, None)
-    
+
     def retrieveData(self):
         sfa = self.getRelevantSFAdapter()
         if sfa is None:

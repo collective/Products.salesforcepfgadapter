@@ -3,10 +3,10 @@ TODO.txt
 - figure out the correct session key
 - fix onSuccess logging messages
 - test: values from request used on validation failure
-- test: session destroyed before submission
 - document how to use it for profile management
 - chained adapter scenarios
 - write test for preset value map
+- test: no mapped fields
 
 1.5+ - Future ideas
 
