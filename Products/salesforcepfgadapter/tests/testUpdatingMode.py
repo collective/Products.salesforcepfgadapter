@@ -6,6 +6,7 @@ import os, sys
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
+from Testing import ZopeTestCase as ztc
 from zope.event import notify
 
 from Products.Archetypes.event import ObjectEditedEvent
@@ -192,6 +193,26 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         except:
             self.assertEqual(self.portal.error_log.getLogEntries()[0]['value'],
                 'Failed to create new Contact in Salesforce: entity is deleted')
+
+    def testNoUpdateIfInitialSessionWasDestroyed(self):
+        # If the session is destroyed (e.g. if Zope restarts) or expires, then
+        # we could get a submission that is supposed to be an update, but is
+        # treated as a creation attempt.
+        self._createTestContact()
+        self.ff1.contact_adapter.setActionIfNoExistingObject('create')
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        
+        # reset the sessions
+        self.app.temp_folder._delObject('session_data')
+        ztc.utils.setupCoreSessions(self.app)
+
+        # submit the form
+        browser.getControl('Submit').click()
+
+        # make sure we didn't create a new item in Salesforce
+        res = self.salesforce.query("SELECT Id FROM Contact WHERE Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
+        self.failIf(res['size'] > 1, 'Known issue: Accidental creation following session destruction.')
 
 def test_suite():
     from unittest import TestSuite, makeSuite

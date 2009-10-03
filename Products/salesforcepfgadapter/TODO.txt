@@ -2,11 +2,8 @@ TODO.txt
 
 - figure out the correct session key
 - fix onSuccess logging messages
-- test: object found initially, but not when form submitted
-- test: object not found initially, but is present when form submitted
 - test: values from request used on validation failure
 - test: session destroyed before submission
-- test: multiple matches
 - document how to use it for profile management
 - chained adapter scenarios
 - write test for preset value map
