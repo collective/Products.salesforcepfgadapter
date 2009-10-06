@@ -104,7 +104,6 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         
         self.assertEqual(self.ff1.replyto.getRawFgTDefault(), 'string:foobar')
         self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
-    
 
 class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """

@@ -197,7 +197,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
     def testNoUpdateIfInitialSessionWasDestroyed(self):
         # If the session is destroyed (e.g. if Zope restarts) or expires, then
         # we could get a submission that is supposed to be an update, but is
-        # treated as a creation attempt.
+        # treated as a creation attempt.  Let's be sure to avoid that...
         self._createTestContact()
         self.ff1.contact_adapter.setActionIfNoExistingObject('create')
         browser = Browser()
@@ -213,6 +213,17 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         # make sure we didn't create a new item in Salesforce
         res = self.salesforce.query("SELECT Id FROM Contact WHERE Email='plonetestcase@plone.org' and LastName='PloneTestCase'")
         self.failIf(res['size'] > 1, 'Known issue: Accidental creation following session destruction.')
+    
+    def testValuesFromRequestUsedAfterValidationFailure(self):
+        self._createTestContact()
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        self.assertEqual(browser.getControl(name='replyto').value,
+            'plonetestcase@plone.org')
+        browser.getControl(name='replyto').value = ''
+        browser.getControl('Submit').click()
+        self.failUnless('Please correct the indicated errors.' in browser.contents)
+        self.assertEqual(browser.getControl(name='replyto').value, '')
 
 def test_suite():
     from unittest import TestSuite, makeSuite

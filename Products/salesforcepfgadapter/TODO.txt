@@ -1,12 +1,21 @@
 TODO.txt
 
-- figure out the correct session key
 - fix onSuccess logging messages
-- test: values from request used on validation failure
 - document how to use it for profile management
-- chained adapter scenarios
 - write test for preset value map
-- test: no mapped fields
+
+Support for chained adapters:
+
+  - Need to use the adapter ID rather than the form ID in the session key.
+
+  - Known issue: Creating an adapter in update mode with no mapped fields (e.g, 
+    for adding new objects related to some existing object) will always result in
+    the "Session expired" message, and the session will not include the id of the
+    found object.  To avoid this, we need to find a way to prime the object id in
+    the session even if @@sf_value is not called.
+
+- Known issue: can't have multiple tabs accessing the same form with different
+  SF objects. (not sure how to distinguish this in the session key...)
 
 1.5+ - Future ideas
 
