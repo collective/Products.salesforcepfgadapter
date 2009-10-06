@@ -296,12 +296,12 @@ class SalesforcePFGAdapter(FormActionAdapter):
 
                     # xxx update logging messages
                     if result['success']:
-                        logger.debug("Successfully created new %s %s in Salesforce" % \
-                                     (adapter.SFObjectType, result['id']))
+                        logger.debug("Successfully %sd %s %s in Salesforce" % \
+                                     (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
                         uids[adapter.getId()] = result['id']
                     else:
-                        errorStr = 'Failed to create new %s in Salesforce: %s' % \
-                            (str(adapter.SFObjectType), result['errors'][0]['message'])
+                        errorStr = 'Failed to %s %s in Salesforce: %s' % \
+                            (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])
                         raise Exception(errorStr)
                 else:
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
