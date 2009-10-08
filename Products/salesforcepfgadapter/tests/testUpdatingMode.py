@@ -172,7 +172,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         browser.getControl('Submit').click()
         
         # should end up on the portal root, with an error message
-        self.assertEqual(browser.url, 'http://nohost/plone')
+        self.assertEqual(browser.url, 'http://nohost/plone/ff1')
         self.failUnless('Could not find item to edit.' in browser.contents)
     
     def testUpdateWhenObjectInitiallyFoundGoesMissing(self):
@@ -192,7 +192,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
             browser.getControl('Submit').click()
         except:
             self.assertEqual(self.portal.error_log.getLogEntries()[0]['value'],
-                'Failed to create new Contact in Salesforce: entity is deleted')
+                'Failed to update Contact in Salesforce: entity is deleted')
 
     def testNoUpdateIfInitialSessionWasDestroyed(self):
         # If the session is destroyed (e.g. if Zope restarts) or expires, then

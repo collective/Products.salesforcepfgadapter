@@ -24,12 +24,13 @@
       />
 
   <subscriber handler=".events.handle_adapter_saved" />
-  
+
   <browser:page
       for="Products.PloneFormGen.interfaces.IPloneFormGenField"
       name="sf_value"
       class=".prepopulator.FieldValueRetriever"
       permission="zope.Public"
+      allowed_attributes="redirectUnlessMatches"
       />
 
 </configure>

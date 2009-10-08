@@ -1,7 +1,7 @@
 from zExceptions import Redirect
 from Acquisition import aq_inner, aq_parent
-from zope.component import adapts, getMultiAdapter
-from Products.PloneFormGen.interfaces import IPloneFormGenForm, IPloneFormGenField
+from zope.component import getMultiAdapter
+from Products.PloneFormGen.interfaces import IPloneFormGenForm
 from Products.Five import BrowserView
 from Products.CMFCore.Expression import getExprContext
 from Products.CMFCore.utils import getToolByName
@@ -23,14 +23,12 @@ class FieldValueRetriever(BrowserView):
     this view.
     """
 
-    adapts(IPloneFormGenField)
-
     def __init__(self, context, request):
         self.context = context
         self.request = request
         self.form = self.getForm()
     
-    def __call__(self):
+    def __call__(self, field_path=None):
         data = getattr(self.request, config.REQUEST_KEY, None)
         if data is None:
             data = self.retrieveData()
@@ -41,10 +39,12 @@ class FieldValueRetriever(BrowserView):
                 obj_id = data['Id']
             self.request.SESSION[(config.SESSION_KEY, formkey)] = obj_id
 
-        field_path = self.getFieldPath()
+        if field_path is None:
+            field_path = self.getFieldPath()
         return data.get(field_path, None)
 
     def retrieveData(self):
+        sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
         sfa = self.getRelevantSFAdapter()
         if sfa is None:
             return {}
@@ -60,9 +60,18 @@ class FieldValueRetriever(BrowserView):
         # we always want the ID
         fieldList.append('Id')
 
-        # find existing item
-        sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
-        query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
+        formkey = self.form.UID()
+        try:
+            obj_id = self.request.SESSION[(config.SESSION_KEY, formkey)]
+        except (AttributeError, KeyError):
+            # find item using expression
+            query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
+        else:
+            if obj_id is not None:
+                query = "SELECT %s FROM %s WHERE Id='%s'" % (', '.join(fieldList), sObjectType, obj_id)
+            else:
+                return {}
+
         res = sfbc.query(query)
         error_msg = ''
         if not len(res['records']):
@@ -93,6 +102,8 @@ class FieldValueRetriever(BrowserView):
         return data
 
     def getForm(self):
+        if IPloneFormGenForm.providedBy(self.context):
+            return self.context
         parent = aq_parent(aq_inner(self.context))
         if not IPloneFormGenForm.providedBy(parent):
             # might be in a fieldset
@@ -115,3 +126,13 @@ class FieldValueRetriever(BrowserView):
             field_map = sfa.getFieldMap()
             if field_path in [f['field_path'] for f in field_map]:
                 return sfa
+
+    def redirectUnlessMatches(self, request_value, message, target):
+        """ Helper for use in a PFG form's "Form Setup Script" override.
+            Checks whether a value matches the database value of a given
+            field, and if not, redirects to a given target.
+        """
+        db_value = self()
+        if request_value != db_value:
+            IStatusMessage(self.request).addStatusMessage(message)
+            raise Redirect(target)

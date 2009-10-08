@@ -12,6 +12,7 @@ from Products.statusmessages.interfaces import IStatusMessage
 
 from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.prepopulator import FieldValueRetriever
+from Products.salesforcepfgadapter.config import SESSION_KEY
 
 class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
@@ -199,6 +200,17 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         retriever.retrieveData()
         self.assertEqual(IStatusMessage(self.app.REQUEST).showStatusMessages()[0].message,
             u'Multiple items found; unable to determine which one to edit.')
+    
+    def testObjectIdFromSessionUsedIfAvailable(self):
+        # if we've already started editing an object, use its ID rather than
+        # doing a fresh query...to test this we manually store the desired UID
+        # in the session, then create an additional matching contact record,
+        # which would normally result in an error as per the previous test
+        self._createTestContact()
+        self._createTestContact()
+        self.app.REQUEST.SESSION = {(SESSION_KEY, self.ff1.UID()): self._todelete[-1]}
+        retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
+        self.assertEqual(retriever(), 'Doe')
     
     def beforeTearDown(self):
         """clean up SF data"""

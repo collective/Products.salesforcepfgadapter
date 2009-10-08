@@ -157,6 +157,7 @@ schema = FormAdapterSchema.copy() + Schema((
         schemata="create vs. update",
         required=True,
         searchable=False,
+        read_permission=ModifyPortalContent,
         vocabulary=DisplayList((
             ('create', _(u'create - Always add a new object to Salesforce.')),
             ('update', _(u'update - Update an existing object in Salesforce.')),
@@ -176,12 +177,14 @@ schema = FormAdapterSchema.copy() + Schema((
         searchable=False,
         default="",
         validators=('talesvalidator',),
+        read_permission=ModifyPortalContent,
         widget=StringWidget(
             label=_(u"Expression to match existing object for update"),
             description=_(u"Enter a TALES expression which evaluates to a SOQL WHERE clause that returns the "
                           u"Salesforce.com object you want to update.  If you interpolate input from the request "
                           u"into single quotes in the SOQL statement, be sure to escape it using the sanitize_soql "
                           u"method. For example, python:\"Username__c='\" + sanitize_soql(request['username']) + \"'\""),
+            visible={'view': 'invisible', 'edit': 'visible'},
             ),
         ),
 
@@ -190,6 +193,7 @@ schema = FormAdapterSchema.copy() + Schema((
         schemata="create vs. update",
         required=True,
         searchable=False,
+        read_permission=ModifyPortalContent,
         widget = SelectionWidget(
             label = _(u'Behavior if no existing object found'),
             description = _(u'If this adapter tries to update an existing object using the above expression, '

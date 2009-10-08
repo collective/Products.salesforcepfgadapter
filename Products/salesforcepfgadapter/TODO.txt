@@ -1,6 +1,5 @@
 TODO.txt
 
-- fix onSuccess logging messages
 - document how to use it for profile management
 - write test for preset value map
 
@@ -18,9 +17,7 @@ Support for chained adapters:
   SF objects. (not sure how to distinguish this in the session key...)
 
 1.5+ - Future ideas
-
 - change default sObjectType to Lead
-
 - An error should be thrown if Salesforce PFG Adapter product is installed and no Salesforce Base Connector
   object has been added to the site.
 - fix i18n support for DataGridField column names, and implement the translation
