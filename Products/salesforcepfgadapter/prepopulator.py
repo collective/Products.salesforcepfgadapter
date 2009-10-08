@@ -27,6 +27,12 @@ class FieldValueRetriever(BrowserView):
         self.context = context
         self.request = request
         self.form = self.getForm()
+        if not hasattr(request, config.REQUEST_KEY) and self.form.absolute_url() not in request.get('HTTP_REFERER', ''):
+            # clear session if first load
+            try:
+                del request.SESSION[(config.SESSION_KEY, self.form.UID())]
+            except (AttributeError, KeyError):
+                pass
     
     def __call__(self, field_path=None):
         data = getattr(self.request, config.REQUEST_KEY, None)

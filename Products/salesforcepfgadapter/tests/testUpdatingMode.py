@@ -172,7 +172,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         browser.getControl('Submit').click()
         
         # should end up on the portal root, with an error message
-        self.assertEqual(browser.url, 'http://nohost/plone/ff1')
+        self.assertEqual(browser.url, 'http://nohost/plone')
         self.failUnless('Could not find item to edit.' in browser.contents)
     
     def testUpdateWhenObjectInitiallyFoundGoesMissing(self):

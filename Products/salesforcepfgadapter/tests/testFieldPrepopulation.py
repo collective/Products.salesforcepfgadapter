@@ -208,6 +208,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         # which would normally result in an error as per the previous test
         self._createTestContact()
         self._createTestContact()
+        self.app.REQUEST.set('HTTP_REFERER', self.ff1.absolute_url())
         self.app.REQUEST.SESSION = {(SESSION_KEY, self.ff1.UID()): self._todelete[-1]}
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         self.assertEqual(retriever(), 'Doe')
