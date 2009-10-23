@@ -6,13 +6,9 @@ import os, sys
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
-from Products.CMFCore.utils import getToolByName
-
 from Products.Archetypes.public import DisplayList
 
 from Products.PloneFormGen.interfaces import IPloneFormGenField
-
-from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
 from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.config import REQUIRED_MARKER
@@ -268,15 +264,22 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.failUnless('Renamed Subject' in regenerated_static_titles_for_mapping)
     
     def testImplementIMultiPageSchema(self):
-        from Products.Archetypes.interfaces import IMultiPageSchema
-        self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
-        sf = self.ff1.salesforce
-        self.assertTrue(IMultiPageSchema.providedBy(sf))
+        try:
+            from Products.Archetypes.interfaces import IMultiPageSchema
+            self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
+            sf = self.ff1.salesforce
+            self.assertTrue(IMultiPageSchema.providedBy(sf))
+        except ImportError:
+            pass
     
     def testNoExtraneousSchemata(self):
-        self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
-        sfSchema = self.ff1.salesforce.schema
-        self.assertEquals(['default', 'field mapping', 'overrides'], sfSchema.getSchemataNames())
+        try:
+            from Products.Archetypes.interfaces import IMultiPageSchema
+            self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
+            sfSchema = self.ff1.salesforce.schema
+            self.assertEquals(['default', 'field mapping', 'overrides'], sfSchema.getSchemataNames())
+        except ImportError:
+            pass
     
     def testSalesforceAdapterOnSuccess(self):
         """Ensure that our Salesforce Adapter mapped objects

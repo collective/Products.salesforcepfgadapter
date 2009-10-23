@@ -7,9 +7,6 @@ from Products.salesforcepfgadapter.config import PROJECTNAME, GLOBALS, \
     SFA_ADD_CONTENT_PERMISSION
 from Products.PloneFormGen.config import ADD_CONTENT_PERMISSION, SKINS_DIR
 
-from zope.i18nmessageid import MessageFactory
-SalesforcePFGAdapterMessageFactory = MessageFactory('salesforcepfgadapter')
-
 registerDirectory(SKINS_DIR + '/salesforcepfgadapter_images', GLOBALS)
 
 def initialize(context):    
@@ -46,5 +43,29 @@ def initialize(context):
             ).initialize(context)
 
     ModuleSecurityInfo('Products.PloneFormGen').declarePublic('SalesforcePFGAdapterMessageFactory')
+    ModuleSecurityInfo('Products.PloneFormGen').declarePublic('HAS_PLONE25')
 
+# Import "PloneFormGenMessageFactory as _" to create message ids
+# in the ploneformgen domain
+# Zope 3.1-style messagefactory module
+# BBB: Zope 2.8 / Zope X3.0
+try:
+    from zope.i18nmessageid import MessageFactory
+except ImportError:
+    from messagefactory_ import SalesforcePFGAdapterMessageFactory
+else:
+    SalesforcePFGAdapterMessageFactory = MessageFactory('salesforcepfgadapter')
 
+# Check for Plone versions
+try:
+    from Products.CMFPlone.migrations import v2_5
+except ImportError:
+    HAS_PLONE25 = False
+else:
+    HAS_PLONE25 = True
+try:
+    from Products.CMFPlone.migrations import v3_0
+except ImportError:
+    HAS_PLONE30 = False
+else:
+    HAS_PLONE30 = True

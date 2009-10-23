@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.6 (unreleased)
+1.6b2 (unreleased)
 
+- Restored Plone 2.5 support.
+  [davisagli]
 
 1.6b1 (2009-09-08)
 

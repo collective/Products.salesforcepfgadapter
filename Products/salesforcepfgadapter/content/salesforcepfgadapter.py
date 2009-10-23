@@ -17,7 +17,12 @@ from Acquisition import aq_parent
 from zope.interface import classImplements
 from DateTime import DateTime
 from ZPublisher.HTTPRequest import FileUpload
-from zope.contenttype import guess_content_type
+try:
+    # 3.0+
+    from zope.contenttype import guess_content_type
+except ImportError:
+    # 2.5
+    from zope.app.content_types import guess_content_type
 
 # CMFCore
 from Products.CMFCore.Expression import getExprContext
@@ -49,7 +54,11 @@ from Products.PloneFormGen.content.actionAdapter import \
 # Local imports
 from Products.salesforcepfgadapter.config import PROJECTNAME, REQUIRED_MARKER, SF_ADAPTER_TYPES
 from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
+from Products.salesforcepfgadapter import HAS_PLONE25, HAS_PLONE30
 from Products.salesforcepfgadapter import validators
+
+if HAS_PLONE25:
+    import zope.i18n
 
 logger = logging.getLogger("PloneFormGen")
 
@@ -135,6 +144,9 @@ class SalesforcePFGAdapter(FormActionAdapter):
     """
     schema = schema
     security = ClassSecurityInfo()
+    
+    if not HAS_PLONE30:
+        finalizeATCTSchema(schema, folderish=True, moveDiscussion=False)
     
     meta_type = portal_type = 'SalesforcePFGAdapter'
     archetype_name = 'Salesforce Adapter'
@@ -553,5 +565,8 @@ class SalesforcePFGAdapter(FormActionAdapter):
 
 registerATCT(SalesforcePFGAdapter, PROJECTNAME)
 
-from Products.Archetypes.interfaces import IMultiPageSchema
-classImplements(SalesforcePFGAdapter, IMultiPageSchema)
+try:
+    from Products.Archetypes.interfaces import IMultiPageSchema
+    classImplements(SalesforcePFGAdapter, IMultiPageSchema)
+except ImportError:
+    pass

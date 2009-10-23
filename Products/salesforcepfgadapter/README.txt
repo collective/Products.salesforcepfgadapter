@@ -136,9 +136,7 @@ To download and install beatbox, please visit::
 
  http://code.google.com/p/salesforce-beatbox/
 
-Tested with all versions of Plone in the 3.x series and their relevant 
-dependencies. For use of SalesforcePFGAdapter with the 2.5.x series of Plone,
-please try SalesforcePFGAdapter version 1.5.
+Tested with Plone 2.5.x, 3.0.x, or 3.1.x and all relevant dependencies.
 
 See dependencies for PloneFormGen 1.5.x+.  As a pre-requisite, all of these must be 
 met in order to use the Salesforce PFG Adapter.
