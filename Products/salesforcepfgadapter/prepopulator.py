@@ -57,7 +57,7 @@ class FieldValueRetriever(BrowserView):
         
         sObjectType = sfa.getSFObjectType()
         econtext = getExprContext(sfa)
-        econtext.vars['sanitize_soql'] = sanitize_soql
+        econtext.setGlobal('sanitize_soql', sanitize_soql)
         updateMatchExpression = sfa.getUpdateMatchExpression(expression_context = econtext)
         mappings = sfa.getFieldMap()
 
