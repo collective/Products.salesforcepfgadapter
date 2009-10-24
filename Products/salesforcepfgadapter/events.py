@@ -1,8 +1,13 @@
 from Acquisition import aq_parent
 from zope.component import adapter
-from Products.Archetypes.interfaces import IObjectEditedEvent
 
+from Products.salesforcepfgadapter import HAS_PLONE30
 from Products.salesforcepfgadapter import interfaces
+
+if HAS_PLONE30:
+    from Products.Archetypes.interfaces import IObjectEditedEvent as IAdapterModifiedEvent
+else:
+    from zope.app.event.objectevent import IObjectModifiedEvent as IAdapterModifiedEvent
 
 SF_VIEW = 'object/@@sf_value'
 PFG_EMAIL_DEFAULT = 'here/memberEmail'
@@ -33,7 +38,7 @@ def _sf_defaults_activated(sf_adapter):
     return sf_adapter.getCreationMode() == 'update' and \
         sf_adapter.getRawUpdateMatchExpression()
 
-@adapter(interfaces.ISalesforcePFGAdapter, IObjectEditedEvent)
+@adapter(interfaces.ISalesforcePFGAdapter, IAdapterModifiedEvent)
 def handle_adapter_saved(sf_adapter, event):
     """On save, check if fields should be prepopulated from Salesforce.
        If so, set the default TAL expression to our custom browser view.

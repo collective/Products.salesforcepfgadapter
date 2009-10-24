@@ -7,12 +7,17 @@ if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
 from zope.event import notify
-from Products.Archetypes.event import ObjectEditedEvent
 from Products.statusmessages.interfaces import IStatusMessage
 
 from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.prepopulator import FieldValueRetriever
 from Products.salesforcepfgadapter.config import SESSION_KEY
+
+from Products.salesforcepfgadapter import HAS_PLONE30
+if HAS_PLONE30:
+    from Products.Archetypes.event import ObjectEditedEvent as AdapterModifiedEvent
+else:
+    from zope.app.event.objectevent import ObjectModifiedEvent as AdapterModifiedEvent
 
 class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase):
     """ test feature that can prepopulate the form from data in Salesforce """
@@ -51,20 +56,20 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression('string:foobar')
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
         default_expr = self.ff1.replyto.getRawFgTDefault()
         self.assertEqual(default_expr, 'object/@@sf_value')
         
         # wrong creation mode
         self.sfa.setCreationMode('create')
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
         default_expr = self.ff1.replyto.getRawFgTDefault()
         self.assertEqual(default_expr, '')
         
         # no update match expression
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression('')
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
         default_expr = self.ff1.replyto.getRawFgTDefault()
         self.assertEqual(default_expr, '')
 
@@ -78,7 +83,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression('string:foobar')
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
         
         default_expr = self.ff1.fieldset.foo.getRawFgTDefault()
         self.assertEqual(default_expr, 'object/@@sf_value')
@@ -93,7 +98,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression('string:foobar')
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
     
     def testRemovingDefaultExpressionDoesntPurgeCustomizedFieldDefaults(self):
         self.ff1.replyto.setFgTDefault('string:foobar')
@@ -101,7 +106,7 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression('')
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
         
         self.assertEqual(self.ff1.replyto.getRawFgTDefault(), 'string:foobar')
         self.assertEqual(self.ff1.pet.getRawFgTDefault(), 'Mittens')
@@ -124,7 +129,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression("""python:"Email='" + sanitize_soql('archimedes@doe.com') + "'" """)
-        notify(ObjectEditedEvent(self.sfa))
+        notify(AdapterModifiedEvent(self.sfa))
         
         self._todelete = []
 

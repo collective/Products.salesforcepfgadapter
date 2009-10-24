@@ -9,12 +9,17 @@ if __name__ == '__main__':
 from Testing import ZopeTestCase as ztc
 from zope.event import notify
 
-from Products.Archetypes.event import ObjectEditedEvent
-
 from Products.ATContentTypes.tests.utils import FakeRequestSession
 
 from Products.Five.testbrowser import Browser
 from Products.salesforcepfgadapter.tests import base
+
+from Products.salesforcepfgadapter import HAS_PLONE30
+if HAS_PLONE30:
+    from Products.Archetypes.event import ObjectEditedEvent as AdapterModifiedEvent
+else:
+    from zope.app.event.objectevent import ObjectModifiedEvent as AdapterModifiedEvent
+
 
 class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
     """ test alternate Salesforce adapter modes (update, upsert)"""
@@ -73,7 +78,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
             {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
         self.ff1.contact_adapter.setCreationMode('update')
         self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
-        notify(ObjectEditedEvent(self.ff1.contact_adapter))
+        notify(AdapterModifiedEvent(self.ff1.contact_adapter))
         
         self.ff1.manage_delObjects(['topic'])
         
@@ -121,7 +126,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
 
         # set actionIfNoExistingObject to 'create'
         self.ff1.contact_adapter.setActionIfNoExistingObject('create')
-        notify(ObjectEditedEvent(self.ff1.contact_adapter))
+        notify(AdapterModifiedEvent(self.ff1.contact_adapter))
         
         # open a test browser on the initial form
         browser = Browser()

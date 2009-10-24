@@ -35,6 +35,7 @@ from Products.Archetypes.public import StringField, StringWidget, \
     SelectionWidget, DisplayList, Schema, ManagedSchema
 
 from Products.ATContentTypes.content.base import registerATCT, ATCTContent
+from Products.ATContentTypes.content.schemata import finalizeATCTSchema
 from Products.CMFCore.permissions import View, ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from Products.validation.config import validation
