@@ -26,7 +26,8 @@ def _set_default(sf_adapter, new_default):
     form_folder = aq_parent(sf_adapter)
     mappings = sf_adapter.getFieldMap()
     for m in mappings:
-        if 'sf_field' in m:
+        # we check m.keys() instead of just m here for Plone 2.5 BBB
+        if 'sf_field' in m.keys():
             field_path = m['field_path'].replace(',', '/')
             field = form_folder.restrictedTraverse(field_path)
             if _safe_to_override(field):

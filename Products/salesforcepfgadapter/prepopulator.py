@@ -1,6 +1,5 @@
 from zExceptions import Redirect
 from Acquisition import aq_inner, aq_parent
-from zope.component import getMultiAdapter
 from Products.PloneFormGen.interfaces import IPloneFormGenForm
 from Products.Five import BrowserView
 from Products.CMFCore.Expression import getExprContext
@@ -97,7 +96,7 @@ class FieldValueRetriever(BrowserView):
                 return {}
             else:
                 # user shouldn't see form
-                portal_url = getMultiAdapter((self.context, self.request), name=u'plone_portal_state').portal_url()
+                portal_url = getToolByName(self.context, 'portal_url')()
                 raise Redirect(portal_url)
 
         data = {'Id':res['records'][0]['Id']}
