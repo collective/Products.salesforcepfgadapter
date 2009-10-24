@@ -3,10 +3,14 @@ import transaction
 # Import the base test case classes
 from Testing import ZopeTestCase as ztc
 from Products.CMFPlone.tests import PloneTestCase as ptc
+from Products.Five import zcml
+from Products.Five import fiveconfigure
 from Products.PloneTestCase.layer import onsetup
 from Products.CMFCore.utils import getToolByName
 
 from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
+
+import Products.salesforcepfgadapter
 
 # These must install cleanly, ZopeTestCase will take care of the others
 ztc.installProduct('PloneFormGen')
@@ -20,14 +24,18 @@ ztc.installProduct('salesforcepfgadapter')
 PRODUCTS = ['salesforcepfgadapter']
 
 @onsetup
+def load_zcml():
+    # load our zcml
+    fiveconfigure.debug_mode = True
+    zcml.load_config('configure.zcml', Products.salesforcepfgadapter)
+    fiveconfigure.debug_mode = False
+
+@onsetup
 def setup_salesforce_base_connector():
     """Install, Add, and Configure Salesforce Base Connector
        on a layer, so that we don't need to repetitively do 
        this prior to each test case run.
-    """
-    # aware of salesforcebaseconnector
-    ztc.installProduct('salesforcebaseconnector')
-    
+    """ 
     # get our plone site
     app = ztc.app()
     plone = app.plone
@@ -41,6 +49,7 @@ def setup_salesforce_base_connector():
     transaction.commit()
     ztc.close(app)
 
+load_zcml()
 ptc.setupPloneSite(products=PRODUCTS)
 setup_salesforce_base_connector()
 
@@ -54,14 +63,17 @@ class SalesforcePFGAdapterTestCase(ptc.PloneTestCase):
         self._todelete = list() # keep track of ephemeral test data to delete
     
 
-class BaseSalesforcePFGAdapterFunctionalTestCase(ptc.FunctionalTestCase):
+class SalesforcePFGAdapterFunctionalTestCase(ptc.FunctionalTestCase):
     """Base class for functional doctests
     """
     def afterSetUp(self):
+        ztc.utils.setupCoreSessions(self.app)
+        
+        self.salesforce = self.portal.portal_salesforcebaseconnector
         self._todelete = list() # keep track of ephemeral test data to delete
         self.folder.invokeFactory('FormFolder', 'ff1')
         self.ff1 = getattr(self.folder, 'ff1')
-    
+
 
 class FakeRequest(dict):
 

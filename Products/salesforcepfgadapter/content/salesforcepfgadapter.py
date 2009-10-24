@@ -12,7 +12,9 @@ __docformat__ = 'plaintext'
 import logging
 
 # Zope imports
+from zope.interface import implements
 from AccessControl import ClassSecurityInfo
+from zExceptions import Redirect
 from Acquisition import aq_parent
 from zope.interface import classImplements
 from DateTime import DateTime
@@ -29,20 +31,24 @@ from Products.CMFCore.Expression import getExprContext
 
 # Plone imports
 from Products.CMFPlone.utils import safe_hasattr
-from Products.Archetypes.public import StringField, SelectionWidget, \
-    DisplayList, Schema, ManagedSchema
+from Products.Archetypes.public import StringField, StringWidget, \
+    SelectionWidget, DisplayList, Schema, ManagedSchema
 
-from Products.ATContentTypes.content.schemata import finalizeATCTSchema
 from Products.ATContentTypes.content.base import registerATCT, ATCTContent
 from Products.CMFCore.permissions import View, ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from Products.validation.config import validation
+from Products.statusmessages.interfaces import IStatusMessage
 
 # DataGridField
 from Products.DataGridField import DataGridField, DataGridWidget
 from Products.DataGridField.SelectColumn import SelectColumn
 from Products.DataGridField.FixedColumn import FixedColumn
+from Products.DataGridField.Column import Column
 from Products.DataGridField.DataGridField import FixedRow
+
+# TALESField
+from Products.TALESField import TALESString
 
 # Interfaces
 from Products.PloneFormGen.interfaces import IPloneFormGenField
@@ -56,6 +62,8 @@ from Products.salesforcepfgadapter.config import PROJECTNAME, REQUIRED_MARKER, S
 from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
 from Products.salesforcepfgadapter import HAS_PLONE25, HAS_PLONE30
 from Products.salesforcepfgadapter import validators
+from Products.salesforcepfgadapter import interfaces
+from Products.salesforcepfgadapter import config
 
 if HAS_PLONE25:
     import zope.i18n
@@ -96,13 +104,32 @@ schema = FormAdapterSchema.copy() + Schema((
                  Salesforce Field for each Form Field.""",
              description_msgid = 'help_salesforce_field_map',
              columns= {
-                 "field_path" : FixedColumn("Form Fields (path)", visible=False),
-                 "form_field" : FixedColumn("Form Fields"),
-                 "sf_field" : SelectColumn("Salesforce Fields", 
+                 "field_path" : FixedColumn("Form Field (path)", visible=False),
+                 "form_field" : FixedColumn("Form Field"),
+                 "sf_field" : SelectColumn("Salesforce Field", 
                                            vocabulary="buildSFFieldOptionList")
              },
              i18n_domain = "salesforcepfgadapter",
              ),
+        ),
+    DataGridField('presetValueMap',
+        searchable=0,
+        required=0,
+        read_permission=ModifyPortalContent,
+        schemata='field mapping',
+        columns=('value', 'sf_field'),
+        allow_delete = True,
+        allow_insert = True,
+        allow_reorder = False,
+        widget = DataGridWidget(
+            label=_(u'Preset field values'),
+            description=_(u"You may optionally configure additional values that should be mapped to Salesforce fields.  The same value will be passed each time the form is submitted.  For example, this could be used to set the LeadSource for a new Lead to 'web'."),
+            columns={
+                'value': Column('Value'),
+                'sf_field': SelectColumn('Salesforce Field',
+                                         vocabulary='buildSFFieldOptionList')
+                }
+            ),
         ),
     DataGridField('dependencyMap',
          searchable=0,
@@ -132,16 +159,74 @@ schema = FormAdapterSchema.copy() + Schema((
              i18n_domain = "salesforcepfgadapter",
              ),
          validators = ('CircularDependencyValidator',),
-         )
+         ),
+
+    StringField(
+        'creationMode',
+        schemata="create vs. update",
+        required=True,
+        searchable=False,
+        read_permission=ModifyPortalContent,
+        vocabulary=DisplayList((
+            ('create', _(u'create - Always add a new object to Salesforce.')),
+            ('update', _(u'update - Update an existing object in Salesforce.')),
+            )),
+        default='create',
+        widget=SelectionWidget(
+            label=_(u'Creation Mode'),
+            description=_(u'Select which action should be performed when the form containing this adapter is submitted.'),
+            format="radio",
+            ),
+         ),
+
+    TALESString(
+        'updateMatchExpression',
+        schemata="create vs. update",
+        required=False,
+        searchable=False,
+        default="",
+        validators=('talesvalidator',),
+        read_permission=ModifyPortalContent,
+        widget=StringWidget(
+            label=_(u"Expression to match existing object for update"),
+            description=_(u"Enter a TALES expression which evaluates to a SOQL WHERE clause that returns the "
+                          u"Salesforce.com object you want to update.  If you interpolate input from the request "
+                          u"into single quotes in the SOQL statement, be sure to escape it using the sanitize_soql "
+                          u"method. For example, python:\"Username__c='\" + sanitize_soql(request['username']) + \"'\""),
+            visible={'view': 'invisible', 'edit': 'visible'},
+            ),
+        ),
+
+    StringField(
+        'actionIfNoExistingObject',
+        schemata="create vs. update",
+        required=True,
+        searchable=False,
+        read_permission=ModifyPortalContent,
+        widget = SelectionWidget(
+            label = _(u'Behavior if no existing object found'),
+            description = _(u'If this adapter tries to update an existing object using the above expression, '
+                            u'but no object is found, what should happen?'),
+            ),
+        vocabulary = DisplayList((
+            ('create', _(u'Create a new object instead.')),
+            ('abort', _(u'Fail with an error message.')),
+            )),
+        default = 'abort',
+        ),
+
 ))
 
 # move 'field mapping' schemata before the inherited overrides schemata
 schema = ManagedSchema(schema.copy().fields())
 schema.moveSchemata('field mapping', -1)
+schema.moveSchemata('create vs. update', -1)
 
 class SalesforcePFGAdapter(FormActionAdapter):
     """ An adapter for PloneFormGen that saves results to Salesforce.
     """
+    implements(interfaces.ISalesforcePFGAdapter)
+    
     schema = schema
     security = ClassSecurityInfo()
     
@@ -182,7 +267,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 adapter = getattr(aq_parent(self), adapter_id)
                 if not adapter._isExecutableAdapter():
                     logger.warn("""Adapter %s will not create a Salesforce object \
-                                   either do to its execution condition or it has been \
+                                   either due to its execution condition or it has been \
                                    disabled on the parent form.""" % adapter.getId()) 
                     continue
                     
@@ -191,21 +276,62 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
                     
                     # flesh out sObject with data returned from previous creates
-                    for (id,field) in [(adapter_map['adapter_id'], adapter_map['sf_field']) for adapter_map in adapter.getDependencyMap() \
-                      if adapter_map['sf_field'] and getattr(aq_parent(self), adapter_map['adapter_id'])._isExecutableAdapter()]:
-                        sObject[field] = uids[id]
-                    
-                    result = salesforce.create(sObject)[0]
+                    for mapping in adapter.getDependencyMap():
+                        if not mapping['sf_field']:
+                            continue
+                        if not getattr(aq_parent(self), mapping['adapter_id'])._isExecutableAdapter():
+                            continue
+                        sObject[mapping['sf_field']] = uids[mapping['adapter_id']]
+
+                    # add in the preset values
+                    for mapping in adapter.getPresetValueMap():
+                        sObject[mapping['sf_field']] = mapping['value']
+                        
+                    if self.getCreationMode() == 'update':
+                        # get the user's SF UID from the session
+                        try:
+                            uid = self._userIdToUpdate()
+                        except KeyError:
+                            error_msg = _(u'Session expired. Unable to process form. Please try again.')
+                            IStatusMessage(REQUEST).addStatusMessage(error_msg)
+                            raise Redirect(aq_parent(self).absolute_url())
+                        self._clearSession()
+
+                        if uid:
+                            sObject['Id'] = uid
+                            result = salesforce.update(sObject)[0]
+                        else:
+                            if self.getActionIfNoExistingObject() == 'create':
+                                result = salesforce.create(sObject)[0]
+                            else:
+                                error_msg = _(u'Could not find item to edit.')
+                                IStatusMessage(REQUEST).addStatusMessage(error_msg)
+                                raise Redirect(aq_parent(self).absolute_url())
+                    else: # create
+                        result = salesforce.create(sObject)[0]
+
                     if result['success']:
-                        logger.debug("Successfully created new %s %s in Salesforce" % \
-                                     (adapter.SFObjectType, result['id']))
+                        logger.debug("Successfully %sd %s %s in Salesforce" % \
+                                     (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
                         uids[adapter.getId()] = result['id']
                     else:
-                        errorStr = 'Failed to create new %s in Salesforce: %s' % \
-                            (str(adapter.SFObjectType), result['errors'][0]['message'])
-                        raise errorStr
+                        errorStr = 'Failed to %s %s in Salesforce: %s' % \
+                            (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])
+                        raise Exception(errorStr)
                 else:
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
+    
+    def _userIdToUpdate(self):
+        form_id = aq_parent(self).UID()
+        return self.REQUEST.SESSION[(config.SESSION_KEY, form_id)]
+    
+    def _clearSession(self):
+        form_id = aq_parent(self).UID()
+        session = self.REQUEST.SESSION
+        try:
+            del session[(config.SESSION_KEY, form_id)]
+        except KeyError:
+            pass
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form
@@ -560,8 +686,6 @@ class SalesforcePFGAdapter(FormActionAdapter):
     
     def processForm(self, data=1, metadata=0, REQUEST=None, values=None):
         ATCTContent.processForm(self, data, metadata, REQUEST, values)
-    
-
 
 registerATCT(SalesforcePFGAdapter, PROJECTNAME)
 

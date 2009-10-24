@@ -30,6 +30,7 @@ setup(name='Products.salesforcepfgadapter',
           'Products.salesforcebaseconnector>=1.2b1',
           'Products.PloneFormGen>=1.5.0',
           'Products.DataGridField>=1.6',
+          'Products.TALESField',
           # -*- Extra requirements: -*-
       ],
       entry_points="""

@@ -16,7 +16,7 @@ def test_suite():
         # Test the control panel
         ztc.FunctionalDocFileSuite(
             f, package='Products.salesforcepfgadapter.tests',
-            test_class=base.BaseSalesforcePFGAdapterFunctionalTestCase,
+            test_class=base.SalesforcePFGAdapterFunctionalTestCase,
             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE | doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS)
         
             for f in testfiles

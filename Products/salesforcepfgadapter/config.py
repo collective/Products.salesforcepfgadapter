@@ -17,3 +17,6 @@ setDefaultRoles(SFA_ADD_CONTENT_PERMISSION, ('Manager','Owner',))
 REQUIRED_MARKER = "(required)"
 
 SF_ADAPTER_TYPES = ['SalesforcePFGAdapter',]
+
+REQUEST_KEY = '_sfpfg_adapter'
+SESSION_KEY = '_pfgadapter_session'

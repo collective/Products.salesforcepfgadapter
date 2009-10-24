@@ -1,7 +1,23 @@
 TODO.txt
 
-1.5+ - Future ideas
+- document how to use it for profile management
+- write test for preset value map
 
+Support for chained adapters:
+
+  - Need to use the adapter ID rather than the form ID in the session key.
+
+  - Known issue: Creating an adapter in update mode with no mapped fields (e.g, 
+    for adding new objects related to some existing object) will always result in
+    the "Session expired" message, and the session will not include the id of the
+    found object.  To avoid this, we need to find a way to prime the object id in
+    the session even if @@sf_value is not called.
+
+- Known issue: can't have multiple tabs accessing the same form with different
+  SF objects. (not sure how to distinguish this in the session key...)
+
+1.5+ - Future ideas
+- change default sObjectType to Lead
 - An error should be thrown if Salesforce PFG Adapter product is installed and no Salesforce Base Connector
   object has been added to the site.
 - fix i18n support for DataGridField column names, and implement the translation
@@ -10,4 +26,3 @@ TODO.txt
    SoapFaultError: 'UNKNOWN_EXCEPTION' 'UNKNOWN_EXCEPTION: 
    Server unavailable due to scheduled maintenance'
 - switch setDependencyMap and setFieldMap to an event driven system
-- display the label as value (key will remain field id), rather than the id of the Salesforce field in the mapping UI.  This is what the Salesforce user is confronted with when they're using the system and may not know what things are called at an API level.

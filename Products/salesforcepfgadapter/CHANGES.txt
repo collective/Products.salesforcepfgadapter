@@ -3,7 +3,16 @@ Changelog
 
 1.6b2 (unreleased)
 
+- Added ability to update existing Salesforce objects found by matching an
+  arbitrary expression.
+  [davisagli]
+
 - Restored Plone 2.5 support.
+  [davisagli]
+
+- Added a 'Preset field values' setting so that hardcoded values can be mapped
+  to Salesforce fields without having to create a hidden form field. Thanks to
+  Jon Stahl for the suggestion.
   [davisagli]
 
 1.6b1 (2009-09-08)
