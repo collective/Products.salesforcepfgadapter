@@ -286,8 +286,9 @@ class SalesforcePFGAdapter(FormActionAdapter):
 
                     # add in the preset values
                     for mapping in adapter.getPresetValueMap():
-                        sObject[mapping['sf_field']] = mapping['value']
-                        
+                        if len(mapping):
+                            sObject[mapping['sf_field']] = mapping['value']
+                    
                     if self.getCreationMode() == 'update':
                         # get the user's SF UID from the session
                         try:
