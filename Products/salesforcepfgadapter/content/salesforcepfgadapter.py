@@ -297,7 +297,6 @@ class SalesforcePFGAdapter(FormActionAdapter):
                             error_msg = _(u'Session expired. Unable to process form. Please try again.')
                             IStatusMessage(REQUEST).addStatusMessage(error_msg)
                             raise Redirect(aq_parent(self).absolute_url())
-                        self._clearSession()
 
                         if uid:
                             sObject['Id'] = uid
@@ -696,3 +695,4 @@ try:
     classImplements(SalesforcePFGAdapter, IMultiPageSchema)
 except ImportError:
     pass
+
