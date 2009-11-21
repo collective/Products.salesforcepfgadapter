@@ -114,6 +114,7 @@ class TestSalesforceFormDateFieldInteraction(base.SalesforcePFGAdapterTestCase):
         # assuming there was a FormDateField that was not filled out, it would
         # look like the following in the request:
         request = base.FakeRequest(comments = 'PloneTestCaseEmptyDateField', date = '')
+        request.SESSION = {}
         
         # call onSuccess 
         self.ff1.contact_adapter.onSuccess(fields, request)  

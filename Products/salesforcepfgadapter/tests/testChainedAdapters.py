@@ -79,6 +79,8 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         request = base.FakeRequest(topic="testChainedDependenciesInsertCorrectly",
                               replyto = 'testChainedDependenciesInsertCorrectly@plone.org',
                               comments='testChainedDependenciesInsertCorrectly')
+        request.SESSION = {}
+
         # call onSuccess on last SF adapter in form
         fields = self.ff1._getFieldObjects()
         self.ff1.account_adapter.onSuccess(fields, request)
@@ -142,6 +144,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         request = base.FakeRequest(topic="testChainedRespectDisabledFinalAdapters",
                               replyto = 'testChainedRespectDisabledFinalAdapters@plone.org',
                               comments='testChainedRespectDisabledFinalAdapters')
+        request.SESSION = {}
         fields = self.ff1._getFieldObjects()
         
         # call onSuccess on last *active* SF adapter in form
@@ -205,6 +208,7 @@ class TestChainedAdapters(base.SalesforcePFGAdapterTestCase):
         request = base.FakeRequest(topic="testChainedRespectNonexecutableFinalAdapters",
                               replyto = 'testChainedRespectNonexecutableFinalAdapters@plone.org',
                               comments='testChainedRespectNonexecutableFinalAdapters')
+        request.SESSION = {}
         fields = self.ff1._getFieldObjects()
         
         # call onSuccess on last *executable* SF adapter in form

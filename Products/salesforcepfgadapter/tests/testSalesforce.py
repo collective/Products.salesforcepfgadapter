@@ -305,6 +305,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         fields = self.ff1._getFieldObjects()
         request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
                               comments='PloneTestCase')            # mapped to LastName (see above)
+        request.SESSION = {}
         
         self.ff1.contact_adapter.onSuccess(fields, request)
         
@@ -350,7 +351,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         fields = self.ff1._getFieldObjects()
         request = base.FakeRequest(replyto = 'plonetestcase1ToN@plone.org', # mapped to Email (see above) 
                               comments='PloneTestCase1ToN')            # mapped to LastName (see above)
-        
+        request.SESSION = {}
         
         # we only call onSuccess for our last SF adapter in the form
         # which calculates the need order and executes all SF adapters in 
@@ -441,7 +442,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         request = base.FakeRequest(replyto = 'plonetestcasefieldsetfields@plone.org', # mapped to Email (see above) 
                               comments='PloneTestCaseFieldsetFields',            # mapped to LastName (see above)
                               subformfield='PloneTestCaseFieldsetSubField',)     # mapped to FirstName (see above)
-        
+        request.SESSION = {}
         
         # we only call onSuccess for our last SF adapter in the form
         # which calculates the need order and executes all SF adapters in 
@@ -563,6 +564,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         request = base.FakeRequest(replyto = contact_create_res[0]['id'], # mapped to ParentId (see above) 
                               comments='test.bin',                   # mapped to Name (see above)
                               filefield_file=_createBinaryFile())     # mapped to FirstName (see above)
+        request.SESSION = {}
         
         # call onSuccess 
         self.ff1.attachment_adapter.onSuccess(fields, request)  
@@ -614,7 +616,8 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # look like the following in the request:
         request = base.FakeRequest(comments = 'PloneTestCaseEmptyIntegerField', 
                                    topic = 'PloneTestCaseEmptyIntegerFieldCompany')
-        
+        request.SESSION = {}
+
         # call onSuccess
         self.ff1.lead_adapter.onSuccess(fields, request)  
         

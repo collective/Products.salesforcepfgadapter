@@ -315,6 +315,10 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         logger.debug("Successfully %sd %s %s in Salesforce" % \
                                      (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
                         uids[adapter.getId()] = result['id']
+
+                        formkey = aq_parent(self).UID()
+                        REQUEST.SESSION[(config.SESSION_KEY, formkey)] = result['id']
+
                     else:
                         errorStr = 'Failed to %s %s in Salesforce: %s' % \
                             (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])

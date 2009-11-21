@@ -35,6 +35,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         fields = self.ff1._getFieldObjects()
         request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
                                    comments='PloneTestCase')            # mapped to LastName (see above)
+        request.SESSION = {}
         self.ff1.contact_adapter.onSuccess(fields, request)
         
         # direct query of Salesforce to get the id of the newly created contact
@@ -229,6 +230,63 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         browser.getControl('Submit').click()
         self.failUnless('Please correct the indicated errors.' in browser.contents)
         self.assertEqual(browser.getControl(name='replyto').value, '')
+
+    def testUpdateModeCreateIfNoMatchResubmitAfterBrowserBackButton(self):
+        # We have a form in update mode and configured to create a new
+        # object if there is not matching object to update. Consider
+        # the following scenario:
+        #
+        #  1. User gets to the form and submits it.
+        #  2. A new record in Salesforce is created and user is taken
+        #     to the thank you page.
+        #  3. User hits the browser back button
+        #
+        # At that point we want to make sure that if the user re
+        # submits the form, we don't create a new object in Salesforce.
+        # Instead, the record created the first time that form was
+        # submited must be updated. Let's test this scenario.
+        self._assertNoExistingTestContact()
+
+        # set actionIfNoExistingObject to 'create'
+        self.ff1.contact_adapter.setActionIfNoExistingObject('create')
+        notify(AdapterModifiedEvent(self.ff1.contact_adapter))
+
+        # open a test browser and submit the form once
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+
+        browser.getControl(name='replyto').value = 'plonetestcase@plone.org'
+        browser.getControl(name='comments').value = 'PloneTestCase'
+        browser.getControl('Submit').click()
+
+        # now there should be one (new) record
+        query_tuple = (['Id','LastName'],
+            self.ff1.contact_adapter.getSFObjectType(),
+            "Email='plonetestcase@plone.org'")
+        res = self.salesforce.query(*query_tuple)
+
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
+        self.assertEqual('PloneTestCase', res['records'][0]['LastName'])
+
+        # hit the back button
+        browser.goBack()
+
+        # change the comments and resubmit the form
+        browser.getControl(name='replyto').value = 'plonetestcase@plone.org'
+        browser.getControl(name='comments').value = 'New PloneTestCase'
+        browser.getControl('Submit').click()
+
+        # there should be still only one record and the comments field
+        # should have changed
+        res = self.salesforce.query(*query_tuple)
+
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
+        self.assertEqual('New PloneTestCase', res['records'][0]['LastName'])
+
 
 def test_suite():
     from unittest import TestSuite, makeSuite
