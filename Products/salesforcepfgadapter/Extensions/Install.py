@@ -1,8 +1,7 @@
 from Products.salesforcepfgadapter.config import PROJECTNAME
-from Products.salesforcepfgadapter import HAS_PLONE25, HAS_PLONE30
+from Products.salesforcepfgadapter import HAS_PLONE30
 
 from Products.CMFCore.utils import getToolByName
-from Products.CMFCore.permissions import ManagePortal
 from Products.CMFPlone.utils import versionTupleFromString
 
 from Products.salesforcepfgadapter.migrations.migrateUpTo10rc1 import Migration as Migration_10rc1
@@ -20,10 +19,12 @@ def _productNeedsMigrationTo10RC1(qi_tool):
         # get needed info about the version that was intalled
         installedProduct = getattr(qi_tool, PROJECTNAME)
         installedVersion = installedProduct.getInstalledVersion()
+        if installedVersion is None:
+            return True
         
         # convert toInstallVersion into a tuple via Plone's migration infrastructure
         installedVersionTuple = versionTupleFromString(installedVersion)
-    
+
         # if we're in the 1.0 branch and we're less mature than a release candidate
         return bool(installedVersionTuple and installedVersionTuple[0:2] == (1,0) and installedVersionTuple[3] in ('alpha', 'beta',))
     else:
@@ -36,6 +37,8 @@ def _productNeedsMigrationTo15a1(qi_tool):
         # get needed info about the version that was intalled
         installedProduct = getattr(qi_tool, PROJECTNAME)
         installedVersion = installedProduct.getInstalledVersion()
+        if installedVersion is None:
+            return True
     
         # convert toInstallVersion into a tuple via Plone's migration infrastructure
         installedVersionTuple = versionTupleFromString(installedVersion)
