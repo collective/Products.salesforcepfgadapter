@@ -6,6 +6,8 @@ import os, sys, datetime
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
+from Products.Five.testbrowser import Browser
+
 from zope.event import notify
 from Products.statusmessages.interfaces import IStatusMessage
 
@@ -119,12 +121,15 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self.ff1.invokeFactory('FormStringField', 'lastname')
         self.lastname = self.ff1.lastname
         self.lastname.setTitle('Last Name')
+        self.ff1.invokeFactory('FormDateField', 'birthday')
+        self.ff1['birthday'].setTitle('Birthday')
         
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         self.sfa = getattr(self.ff1, 'salesforce')
         self.test_fieldmap = (
             dict(field_path='lastname', form_field='Last Name', sf_field='LastName'),
             dict(field_path='replyto', form_field='Your E-Mail Address', sf_field='Email'),
+            dict(field_path='birthday', form_field='Birthday', sf_field='Birthdate'),
             )
         self.sfa.setFieldMap(self.test_fieldmap)
         self.sfa.setCreationMode('update')
@@ -217,6 +222,12 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self.app.REQUEST.SESSION = {(SESSION_KEY, self.ff1.UID()): self._todelete[-1]}
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         self.assertEqual(retriever(), 'Doe')
+    
+    def testDateTimeWidgetRendersRetrievedDate(self):
+        self._createTestContact()
+        browser = Browser()
+        browser.open('http://nohost' + '/'.join(self.ff1.getPhysicalPath()))
+        self.assertEqual(browser.getControl(name='birthday_day').value, ['04'])
     
     def beforeTearDown(self):
         """clean up SF data"""

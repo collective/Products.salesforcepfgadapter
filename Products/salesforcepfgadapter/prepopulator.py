@@ -1,3 +1,5 @@
+from DateTime import DateTime
+from datetime import date
 from zExceptions import Redirect
 from Acquisition import aq_inner, aq_parent
 from Products.PloneFormGen.interfaces import IPloneFormGenForm
@@ -103,7 +105,11 @@ class FieldValueRetriever(BrowserView):
         for m in mappings:
             if not m['sf_field']:
                 continue
-            data[m['field_path']] = res['records'][0][m['sf_field']]
+            value = res['records'][0][m['sf_field']]
+            if isinstance(value, date):
+                # make sure that the date gets stored with a timezone
+                value = str(value) + ' ' + DateTime().localZone()
+            data[m['field_path']] = value
         return data
 
     def getForm(self):
