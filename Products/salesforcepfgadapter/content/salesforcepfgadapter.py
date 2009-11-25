@@ -57,6 +57,7 @@ from Products.PloneFormGen.interfaces import IPloneFormGenField
 # PloneFormGen imports
 from Products.PloneFormGen.content.actionAdapter import \
     FormActionAdapter, FormAdapterSchema
+from Products.PloneFormGen.content.fields import FGFileField
 
 # Local imports
 from Products.salesforcepfgadapter.config import PROJECTNAME, REQUIRED_MARKER, SF_ADAPTER_TYPES
@@ -367,7 +368,13 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     mimetype, enc = guess_content_type(filename, data, None)
                     from base64 import encodestring
                     formFieldValue = encodestring(data)
-            
+                    filenameFieldName = self._getSFFieldForFormField(list(formFieldPath) + ['filename'], formPath)
+                    if filenameFieldName:
+                        sObject[filenameFieldName] = filename
+                    mimetypeFieldName = self._getSFFieldForFormField(list(formFieldPath) + ['mimetype'], formPath)
+                    if mimetypeFieldName:
+                        sObject[mimetypeFieldName] = mimetype
+
             salesforceFieldName = self._getSFFieldForFormField(formFieldPath, formPath)
             if not salesforceFieldName or formFieldValue is None:
                 # we either haven't found a mapping or the
@@ -581,10 +588,15 @@ class SalesforcePFGAdapter(FormActionAdapter):
         
         for formField in formFolder.objectIds():
             fieldObj = getattr(formFolder, formField)
+            title = fieldObj.Title().strip()
+            path = ",".join(fieldObj.getPhysicalPath()[len(formFolderPath):])
             if IPloneFormGenField.providedBy(fieldObj):
-                formFieldTitles.append((fieldObj.Title().strip(),
-                                        ",".join(fieldObj.getPhysicalPath()[len(formFolderPath):])))
-        
+                formFieldTitles.append((title, path))
+            # also allow mapping the filename and mimetype for file uploads
+            if isinstance(fieldObj, FGFileField):
+                formFieldTitles.append((title + ' Filename', path + ',filename'))
+                formFieldTitles.append((title + ' Mimetype', path + ',mimetype'))
+            
             # can we also inspect further down the chain
             if fieldObj.isPrincipiaFolderish:
                 # since nested folders only go 1 level deep

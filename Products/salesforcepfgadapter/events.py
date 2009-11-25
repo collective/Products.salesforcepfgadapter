@@ -29,9 +29,12 @@ def _set_default(sf_adapter, new_default):
         # we check m.keys() instead of just m here for Plone 2.5 BBB
         if 'sf_field' in m.keys():
             field_path = m['field_path'].replace(',', '/')
-            field = form_folder.restrictedTraverse(field_path)
-            if _safe_to_override(field):
-                field.setFgTDefault(new_default)
+            try:
+                field = form_folder.restrictedTraverse(field_path)
+                if _safe_to_override(field):
+                    field.setFgTDefault(new_default)
+            except AttributeError:
+                pass
 
 def _sf_defaults_activated(sf_adapter):
     # if we're upserting and prepopulating, we're active

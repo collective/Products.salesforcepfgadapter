@@ -3,6 +3,10 @@ Changelog
 
 1.6b2 (unreleased)
 
+- Allow mapping the filename and mimetype of file uploads to fields in SFDC
+  (probably on an Attachment object) in addition to the data itself.
+  [davisagli]
+
 - Added ability to view and update values from existing Salesforce objects,
   found by matching an arbitrary expression.
   [davisagli]

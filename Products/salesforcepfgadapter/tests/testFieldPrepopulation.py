@@ -178,7 +178,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self.assertEqual(data['replyto'], 'archimedes@doe.com')
         self.assertEqual(data['lastname'], 'Doe')
         self.failUnless('Id' in data)
-        self.assertEqual(len(data.keys()), 3)
+        self.assertEqual(len(data.keys()), 4)
     
     def testRetrieveDataNothingFound(self):
         self.sfa.setUpdateMatchExpression("string:Email='not-a-real-email'")
