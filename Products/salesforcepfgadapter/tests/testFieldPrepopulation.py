@@ -61,6 +61,10 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         notify(AdapterModifiedEvent(self.sfa))
         default_expr = self.ff1.replyto.getRawFgTDefault()
         self.assertEqual(default_expr, 'object/@@sf_value')
+        # in the special case of the default 'replyto' field, make sure the
+        # default value gets cleared too
+        default = self.ff1.replyto.getFgDefault()
+        self.assertEqual(default, '')
         
         # wrong creation mode
         self.sfa.setCreationMode('create')

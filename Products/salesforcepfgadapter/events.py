@@ -15,6 +15,7 @@ PFG_EMAIL_DEFAULT = 'here/memberEmail'
 def _safe_to_override(field):
     if hasattr(field, 'getRawFgTDefault'):
         if field.getRawFgTDefault() == PFG_EMAIL_DEFAULT:
+            field.setFgDefault('')
             return True
         return not field.getRawFgTDefault() or \
             field.getRawFgTDefault() == SF_VIEW
