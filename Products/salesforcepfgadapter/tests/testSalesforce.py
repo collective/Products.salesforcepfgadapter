@@ -298,13 +298,14 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
-            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
-        
-            
+            ))
+        self.ff1.contact_adapter.setPresetValueMap((
+            {'value': 'PloneTestCase', 'sf_field': 'LastName'},
+            ))
+
         # build the request and submit the form
         fields = self.ff1._getFieldObjects()
-        request = base.FakeRequest(replyto = 'plonetestcase@plone.org', # mapped to Email (see above) 
-                              comments='PloneTestCase')            # mapped to LastName (see above)
+        request = base.FakeRequest(replyto = 'plonetestcase@plone.org') # mapped to Email (see above) 
         request.SESSION = {}
         
         self.ff1.contact_adapter.onSuccess(fields, request)

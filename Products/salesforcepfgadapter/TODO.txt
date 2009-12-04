@@ -1,8 +1,5 @@
 TODO.txt
 
-- document how to use it for profile management
-- write test for preset value map
-
 Support for chained adapters:
 
   - Need to use the adapter ID rather than the form ID in the session key.
