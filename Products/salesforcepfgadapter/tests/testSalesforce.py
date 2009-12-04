@@ -523,9 +523,9 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
             fp.write('\x00' + 'x' * (1 << 19))
             fp.seek(0)
             env = {'REQUEST_METHOD':'PUT'}
-            headers = {'content-type':'text/plain',
+            headers = {'content-type':'application/msword',
                        'content-length': 1 << 19,
-                       'content-disposition':'attachment; filename=test.bin'}
+                       'content-disposition':'attachment; filename=test.doc'}
             fs = FieldStorage(fp=fp, environ=env, headers=headers)
             return FileUpload(fs)
         
@@ -542,7 +542,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # get ready to cleanup regardless of test case success
         self._todelete.append(contact_create_res[0]['id'])
         
-        # create a attachmetn action adapter
+        # create a attachment action adapter
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'attachment_adapter')
         
         # disable mailer adapter
@@ -555,15 +555,15 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         # bogus mapping to meet Attachment reqs
         self.ff1.attachment_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'ParentId'},
-            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'Name'},
             {'field_path': 'filefield', 'form_field': 'File', 'sf_field': 'Body'},
+            {'field_path': 'filefield,mimetype', 'form_field': 'File Mimetype', 'sf_field': 'ContentType'},
+            {'field_path': 'filefield,filename', 'form_field': 'File Filename', 'sf_field': 'Name'},
         ))
         
         # build the request and submit the form for both adapters
         fields = self.ff1._getFieldObjects()
         request = base.FakeRequest(replyto = contact_create_res[0]['id'], # mapped to ParentId (see above) 
-                              comments='test.bin',                   # mapped to Name (see above)
-                              filefield_file=_createBinaryFile())     # mapped to FirstName (see above)
+                              filefield_file=_createBinaryFile(),)     # mapped to FirstName (see above)
         request.SESSION = {}
         
         # call onSuccess 
@@ -571,14 +571,15 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         
         # query for our attachment
         attach_res = self.salesforce.query(
-            "SELECT Id, Name, BodyLength FROM Attachment WHERE ParentId='%s'" % (
+            "SELECT Id, Name, ContentType, BodyLength FROM Attachment WHERE ParentId='%s'" % (
                 contact_create_res[0]['id'])
             )
         # in case we fail, stock up our to delete list for tear down
         self._todelete.append(attach_res['records'][0]['Id'])
         
         # make our assertions
-        self.assertEqual('test.bin', attach_res['records'][0]['Name'])
+        self.assertEqual('test.doc', attach_res['records'][0]['Name'])
+        self.assertEqual('application/msword', attach_res['records'][0]['ContentType'])
         self.failUnless(attach_res['records'][0]['BodyLength'] > 0)
     
     def testEmptyIntegerFieldIsntPushedUpstreamAsInvalidXSDIntDouble(self):
