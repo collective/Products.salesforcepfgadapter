@@ -1,5 +1,14 @@
+from zope.interface import implements
 from Acquisition import aq_parent
 from Products.validation.interfaces.IValidator import IValidator
+
+try: 
+    # Plone 4 and higher
+    import plone.app.upgrade
+    USE_BBB_VALIDATORS = False
+except ImportError:
+    # BBB Plone 3
+    USE_BBB_VALIDATORS = True
 
 CIRCULAR_FAILURE_MSG = """You've created a circular chain of dependencies."""
 
@@ -28,7 +37,10 @@ class CircularDependencyValidator(object):
     chain of dependencies.  This couldn't happen for real in SF, but could in the form's configuration
     through normal user error."""
     
-    __implements__ = IValidator
+    if USE_BBB_VALIDATORS:
+        __implements__ = (IValidator,)
+    else:
+        implements(IValidator)
 
     def __init__(self, name, title='', description='', fail_message=CIRCULAR_FAILURE_MSG):
         self.name = name
