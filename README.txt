@@ -1,24 +1,3 @@
-Salesforce PFG Adapter (PloneFormGen Add-On)
-============================================
-Product home is http://plone.org/products/salesforcepfgadapter. A 
-`documentation area`_ and `issue tracker`_ are available at the linked 
-locations.
-
-.. _documentation area: http://plone.org/documentation/manual/integrating-plone-with-salesforce.com
-.. _issue tracker: http://plone.org/products/salesforcepfgadapter/issues
-
-A Google Group, called `Plone Salesforce Integration`_ exists with the sole 
-aim of discussing and developing tools to make Plone integrate well with
-Salesforce.com.  If you have a question, joining this group and posting to the 
-mailing list is the likely best way to get support.
-
-.. _Plone Salesforce Integration: http://groups.google.com/group/plonesf
-
-Failing that, please try using the Plone users' mailing list or the #plone irc 
-channel for support requests. If you are unable to get your questions answered 
-there, or are interested in helping develop the product, see the credits below 
-for individuals you might contact.
-
 Overview
 ========
 
@@ -128,39 +107,34 @@ offers the following additional features:
 Dependencies
 ============
 
-Depends upon the beatbox library >= 16.0b1, which is a Python wrapper to the
-Salesforce.com API (version 7.0).  You must have a Salesforce.com account
-that provides API access.
+Tested with Plone 2.5.x and 3.x.
 
-To download and install beatbox, please visit::
-
- http://code.google.com/p/salesforce-beatbox/
-
-Tested with Plone 2.5.x, 3.0.x, or 3.1.x and all relevant dependencies.
-
-See dependencies for PloneFormGen 1.5.x+.  As a pre-requisite, all of these must be 
-met in order to use the Salesforce PFG Adapter.
+Depends upon the beatbox library >= 16.0, which is a Python wrapper to the
+Salesforce.com API.  You must have a Salesforce.com account that provides API
+access.
 
 SalesforceBaseConnector >= 1.2b1. See 
 http://plone.org/products/salesforcebaseconnector
 
-DataGridField >= 1.6.x.  Earlier versions didn't properly disable 
-DataGridField's add row feature, which is important in our case because the 
-user can't add new possible form fields for mapping from within the Salesforce
-Adapter.  Those need to be added to the form itself.
+PloneFormGen and related dependencies.
+
+DataGridField >= 1.6.x.
+
  
 Installation
 ============
 
 Typical for a Zope/Plone product:
 
-* Install and *configure* dependencies (includes beatbox setup and creation of
-  Salesforce Base Connector with credentials in the root of the Plone site.)
+* Add the Products.salesforcepfgadapter egg to your buildout.  (Or on a
+  non-buildout installation, install the product and dependencies as
+  appropriate.)
 
-* Unpack the product package into the Products folder of the Zope/Plone 
-  instance. Check your ownership and permissions.
+* Rerun buildout and restart Zope.
 
-* Restart Zope.
+* If you don't have a Salesforce Base Connector (portal_salesforcebaseconnector)
+  in the root of your site yet, add one via the ZMI add menu, and configure its
+  login credentials.
 
 * Go to the Site Setup page in the Plone interface and click on the Add/Remove
   Products link. Choose salesforcepfgadapter (check its checkbox) and click the 
@@ -190,30 +164,41 @@ See Known Problems section of README.txt within PloneFormGen. In addition:
   response: SoapFaultError: 'UNKNOWN_EXCEPTION' 'UNKNOWN_EXCEPTION: Server 
   unavailable due to scheduled maintenance'
 
-This is left unfixed in all branches <=1.6.x of the Salesforce PFG Adapter, 
-due to the modifications that would be required to adequately handle the case 
-with technologies lower in the stack, such as Salesforce Base Connector and 
-beatbox. This will be addressed in a future release.
 
-Another known problem arises when using versions of DataGridField (DGF), a 
-dependency to this product, < 1.6 final. DGF shipped with two versions
-of a css stylesheet called datagridwidget.css (one a .dtml file and the other 
-a .css file).  If the incorrect version was active, the PloneFormGen to 
-Salesforce "field mapping" user interface appeared as though additional fields
-were addable directly from the Salesforce Adapter editing screen.  In 
-addition, the hidden column containing the relative path to the field appeared
-to the user.  This is easily resolved by upgrading to DGF versions >= 1.6.
+Further Information
+===================
+
+Product home is http://plone.org/products/salesforcepfgadapter. A 
+`documentation area`_ and `issue tracker`_ are available at the linked 
+locations.
+
+.. _documentation area: http://plone.org/documentation/kb/integrating-plone-with-salesforce
+.. _issue tracker: http://plone.org/products/salesforcepfgadapter/issues
+
+A Google Group, called `Plone Salesforce Integration`_ exists with the sole 
+aim of discussing and developing tools to make Plone integrate well with
+Salesforce.com.  If you have a question, joining this group and posting to the 
+mailing list is the likely best way to get support.
+
+.. _Plone Salesforce Integration: http://groups.google.com/group/plonesf
+
+Failing that, please try using the Plone users' mailing list or the #plone irc 
+channel for support requests. If you are unable to get your questions answered 
+there, or are interested in helping develop the product, see the credits below 
+for individuals you might contact.
+
 
 Credits
 =======
 
 The Plone & Salesforce crew in Seattle and Portland:
 
-- Jon Baldivieso <jonb --AT-- onenw --DOT-- org>
-- Andrew Burkhalter <andrewb --AT-- onenw --DOT-- org>
+- Jon Baldivieso <jonb --AT-- groundwire --DOT-- org>
+- Andrew Burkhalter <andrewburkhalter --AT-- gmail --DOT-- com>
 - Brian Gershon <briang --AT-- webcollective --DOT-- coop>
-- David Glick <davidglick --AT-- onenw --DOT-- org> 
+- David Glick <davidglick --AT-- groundwire --DOT-- org> 
 - Jesse Snyder <jesses --AT-- npowerseattle --DOT-- org>
+- Alex Tokar <alext --AT-- webcollective --DOT-- coop>
 
 With special PloneFormGen guest star:
 
