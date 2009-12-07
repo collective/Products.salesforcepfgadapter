@@ -100,14 +100,14 @@ Chained Adapters
 ----------------
 
 Salesforce-PloneFormGen adapters can be used to create multiple related
-objects from a single form.  e.g. creating a Contact linked to an Account:
+objects from a single form.  e.g. creating a Contact linked to an Account::
 
------------                -------------
-| Account |                | Contact   |
------------                -------------
-| Id      | -------------> | AccountId |
-| Name    |                | LastName  |
------------                -------------
+ -----------                -------------
+ | Account |                | Contact   |
+ -----------                -------------
+ | Id      | -------------> | AccountId |
+ | Name    |                | LastName  |
+ -----------                -------------
 
 To create this link, the 'AccountId' external key of the Contact object needs
 to be set to the Id of the Account it should be associated with.  This can be
@@ -129,7 +129,51 @@ accidentally configured.
 Updating Existing Objects
 -------------------------
 
-FIXME
+By default a Salesforce Adapter will always create new objects in Salesforce.
+It is also possible to use them in an "update" mode in which the form will
+find an object in Salesforce matching a given expression, load the form with
+values from that object, and then save changes to the object when the form
+is submitted.
+
+This can be set up using the following settings on the "create vs. update"
+section of the Salesforce Adapter configuration:
+
+ Creation Mode
+   Set to 'create' to always create a new object (default).  Set to 'update'
+   to try to find and update an existing object.
+ 
+ Expression to match existing object for update
+   Enter a TALES expression which evaluates to a SOQL WHERE clause that returns
+   the Salesforce.com object you want to update.  If you interpolate input from
+   the request into single quotes in the SOQL statement, be sure to escape it
+   using the sanitize_soql method. For example, the following could be used to
+   match objects whose Username__c field equals a value passed in the 'username'
+   parameter of the request::
+    
+    python:"Username__c='" + sanitize_soql(request.form.get('username', '')) + "'"
+
+ Behavior if no existing object found
+   Determines the desired behavior in case no object was found matching the
+   given expression.  If set to 'Fail with an error message.', an error will be
+   displayed (default).  If set to 'create', a new object will be created instead.
+
+NB: The adapters accomplish prepopulation of form fields by modifying the
+default value override for all mapped fields.  Default value overrides that
+have already been customized will be left intact.
+
+NB: Salesforce is queried using the match expression only when the form is
+first loaded; at which point the Salesforce Id of the object that was found
+is stored in a Zope session.  This ensures that changes are always saved to
+the same object that was loaded, even if other changes happened to the database
+in the meantime.  However, it does mean that if the user's session is destroyed
+(such as during a Zope restart), then submitting the form will fail.
+
+When using chained adapters, some adapters could be used in update mode while
+others are used in create mode.  For example, this could be used to add a new
+Opportunity associated with an existing Account.  Currently this requires
+setting up at least one form field mapping for each adapter to work properly.
+In addition, the behavior if a single field is mapped by multiple adapters is
+not yet defined.
 
 
 Dependencies
