@@ -30,21 +30,28 @@ class FieldValueRetriever(BrowserView):
         self.form = self.getForm()
         if not hasattr(request, config.REQUEST_KEY) and self.form.absolute_url() not in request.get('HTTP_REFERER', ''):
             # clear session if first load
-            try:
-                del request.SESSION[(config.SESSION_KEY, self.form.UID())]
-            except (AttributeError, KeyError):
-                pass
+            sf_adapters = self._getSFAdapters()
+            for sfa in sf_adapters:
+                try:
+                    del request.SESSION[(config.SESSION_KEY, sfa.UID())]
+                except (AttributeError, KeyError):
+                    pass
     
     def __call__(self, field_path=None):
-        data = getattr(self.request, config.REQUEST_KEY, None)
-        if data is None:
+        all_data = getattr(self.request, config.REQUEST_KEY, {})
+        sfa = self.getRelevantSFAdapter()
+        if sfa is None:
+            return
+        if sfa.UID() not in all_data:
             data = self.retrieveData()
-            setattr(self.request, config.REQUEST_KEY, data)
-            formkey = self.form.UID()
+            all_data[sfa.UID()] = data
+            setattr(self.request, config.REQUEST_KEY, all_data)
             obj_id = None
             if 'Id' in data:
                 obj_id = data['Id']
-            self.request.SESSION[(config.SESSION_KEY, formkey)] = obj_id
+            self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = obj_id
+        else:
+            data = all_data[sfa.UID()]
 
         if field_path is None:
             field_path = self.getFieldPath()
@@ -67,9 +74,8 @@ class FieldValueRetriever(BrowserView):
         # we always want the ID
         fieldList.append('Id')
 
-        formkey = self.form.UID()
         try:
-            obj_id = self.request.SESSION[(config.SESSION_KEY, formkey)]
+            obj_id = self.request.SESSION[(config.SESSION_KEY, sfa.UID())]
         except (AttributeError, KeyError):
             # find item using expression
             query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
@@ -124,6 +130,9 @@ class FieldValueRetriever(BrowserView):
     def getFieldPath(self):
         return ','.join(self.context.getPhysicalPath()[len(self.form.getPhysicalPath()):])
 
+    def _getSFAdapters(self):
+        return [o for o in self.form.objectValues() if o.portal_type == 'SalesforcePFGAdapter']
+
     def getRelevantSFAdapter(self):
         """
         Returns the SF adapter that is already in use for this request,
@@ -133,9 +142,9 @@ class FieldValueRetriever(BrowserView):
         field_path = self.getFieldPath()
         
         # find a Salesforce adapter in this form that maps this field
-        for sfa in [o for o in pfg.objectValues() if o.portal_type == 'SalesforcePFGAdapter']:
+        for sfa in self._getSFAdapters():
             field_map = sfa.getFieldMap()
-            if field_path in [f['field_path'] for f in field_map]:
+            if field_path in [f['field_path'] for f in field_map if f.get('sf_field', None)]:
                 return sfa
 
     def redirectUnlessMatches(self, request_value, message, target):

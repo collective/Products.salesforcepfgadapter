@@ -122,6 +122,60 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.assertEqual(1, res['size'])
         self.assertEqual('PloneTestCaseChanged', res['records'][0]['LastName'])
 
+    def testUpdateModeWithChainedUpdateAdapters(self):
+        # add an Account and associated Contact in Salesforce.
+        res = self.salesforce.create({
+            'type': 'Account',
+            'Name': 'Test Account',
+            })
+        account_id = res[0]['id']
+        self._todelete.append(account_id)
+        res = self.salesforce.create({
+            'type': 'Contact',
+            'LastName': 'McPloneson',
+            'Email': 'plonetestcase@plone.org',
+            'AccountId': account_id,
+            })
+        self._todelete.append(res[0]['id'])
+        
+        # add an Account adapter for updating the account we created,
+        # and make the Contact adapter map its object id to AccountId
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'account_adapter')
+        self.ff1.invokeFactory('FormStringField', 'account_name')
+        self.ff1.account_adapter.setSFObjectType('Account')
+        self.ff1.account_adapter.setCreationMode('update')
+        self.ff1.account_adapter.setUpdateMatchExpression("string:Id='%s'" % account_id)
+        self.ff1.account_adapter.setFieldMap((
+            {'field_path': 'account_name', 'form_field': '', 'sf_field': 'Name'},
+            ))
+        self.ff1.account_adapter.setPresetValueMap((
+            {'value': 'ChangedDescription', 'sf_field': 'Description'},
+            ))
+        self.ff1.contact_adapter.setDependencyMap((
+            {'adapter_id': 'account_adapter', 'adapter_name': '', 'sf_field': 'AccountId'},
+            ))
+        notify(AdapterModifiedEvent(self.ff1.account_adapter))
+        
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        self.assertEqual(browser.getControl(name='account_name').value, 'Test Account')
+        self.assertEqual(browser.getControl(name='comments').value, 'McPloneson')
+        browser.getControl(name='account_name').value = 'Changed Test Account'
+        browser.getControl(name='comments').value = 'PloneTestCaseChanged'
+        browser.getControl('Submit').click()
+
+        # we should only get one record, and the name should be changed
+        res = self.salesforce.query(['Id','Description', 'Name'], 'Account',
+                                    "Id='%s'" % account_id)
+        self.assertEqual(1, res['size'])
+        self.assertEqual('Changed Test Account', res[0].Name)
+        self.assertEqual('ChangedDescription', res[0].Description)
+        res = self.salesforce.query(['Id','LastName','AccountId'],self.ff1.contact_adapter.getSFObjectType(),
+                                    "Email='plonetestcase@plone.org'")
+        self.assertEqual(1, res['size'])
+        self.assertEqual('PloneTestCaseChanged', res[0].LastName)
+        self.assertEqual(account_id, res[0].AccountId)
+
     def testUpdateModeCreateIfNoMatch(self):
         self._assertNoExistingTestContact()
 

@@ -199,7 +199,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         
         # swap in some mock data, get the retriever for another field, and make
         # sure it gives us the mock data
-        self.app.REQUEST._sfpfg_adapter['lastname'] = 'Smith'
+        self.app.REQUEST._sfpfg_adapter[self.sfa.UID()]['lastname'] = 'Smith'
         retriever2 = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         lastname = retriever2()
         self.assertEqual(lastname, 'Smith')
@@ -223,7 +223,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self._createTestContact()
         self._createTestContact()
         self.app.REQUEST.set('HTTP_REFERER', self.ff1.absolute_url())
-        self.app.REQUEST.SESSION = {(SESSION_KEY, self.ff1.UID()): self._todelete[-1]}
+        self.app.REQUEST.SESSION = {(SESSION_KEY, self.sfa.UID()): self._todelete[-1]}
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         self.assertEqual(retriever(), 'Doe')
     

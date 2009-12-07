@@ -272,28 +272,30 @@ class SalesforcePFGAdapter(FormActionAdapter):
                                    either due to its execution condition or it has been \
                                    disabled on the parent form.""" % adapter.getId()) 
                     continue
-                    
+
+                # start the object based on the form field mapping
                 sObject = adapter._buildSObjectFromForm(fields, REQUEST)
+
+                # flesh out sObject with data returned from previous creates
+                for mapping in adapter.getDependencyMap():
+                    if not mapping['sf_field']:
+                        continue
+                    if not getattr(aq_parent(self), mapping['adapter_id'])._isExecutableAdapter():
+                        continue
+                    sObject[mapping['sf_field']] = uids[mapping['adapter_id']]
+
+                # add in the preset values
+                for mapping in adapter.getPresetValueMap():
+                    if len(mapping):
+                        sObject[mapping['sf_field']] = mapping['value']
+
                 if len(sObject.keys()) > 1:
                     salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
-                    
-                    # flesh out sObject with data returned from previous creates
-                    for mapping in adapter.getDependencyMap():
-                        if not mapping['sf_field']:
-                            continue
-                        if not getattr(aq_parent(self), mapping['adapter_id'])._isExecutableAdapter():
-                            continue
-                        sObject[mapping['sf_field']] = uids[mapping['adapter_id']]
-
-                    # add in the preset values
-                    for mapping in adapter.getPresetValueMap():
-                        if len(mapping):
-                            sObject[mapping['sf_field']] = mapping['value']
                     
                     if self.getCreationMode() == 'update':
                         # get the user's SF UID from the session
                         try:
-                            uid = self._userIdToUpdate()
+                            uid = self._userIdToUpdate(adapter)
                         except KeyError:
                             error_msg = _(u'Session expired. Unable to process form. Please try again.')
                             IStatusMessage(REQUEST).addStatusMessage(error_msg)
@@ -317,8 +319,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                                      (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
                         uids[adapter.getId()] = result['id']
 
-                        formkey = aq_parent(self).UID()
-                        REQUEST.SESSION[(config.SESSION_KEY, formkey)] = result['id']
+                        REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())] = result['id']
 
                     else:
                         errorStr = 'Failed to %s %s in Salesforce: %s' % \
@@ -327,17 +328,8 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 else:
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
     
-    def _userIdToUpdate(self):
-        form_id = aq_parent(self).UID()
-        return self.REQUEST.SESSION[(config.SESSION_KEY, form_id)]
-    
-    def _clearSession(self):
-        form_id = aq_parent(self).UID()
-        session = self.REQUEST.SESSION
-        try:
-            del session[(config.SESSION_KEY, form_id)]
-        except KeyError:
-            pass
+    def _userIdToUpdate(self, adapter):
+        return self.REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())]
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form
