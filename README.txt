@@ -39,9 +39,9 @@ offers the following additional features:
 Usage
 =====
 
-Connecting a PloneFormGen form to Salesforce happens by adding a "Salesforce
-Adapter" to a PloneFormGen form folder.  Typically the site editor responsible
-for setting up the form will:
+Connecting a PloneFormGen form to Salesforce is accomplished by adding a
+"Salesforce Adapter" to a PloneFormGen form folder.  Typically the site editor
+responsible setting up the form will:
 
  1. Create a PloneFormGen form with the necessary fields.
  2. Add a Salesforce Adapter to the form via Plone's add menu.
@@ -52,6 +52,7 @@ for setting up the form will:
      the form and fields in Salesforce.
    * whether the adapter should create a new object, or edit an existing one
      found by matching some expression.
+
 
 Mapping Form Fields
 -------------------
@@ -76,41 +77,54 @@ intended behavior, since the update would fail (or worse, produce very
 confusing results) if the previously selected sObject type's mapping were
 maintained.
 
+
 Preset Values
 -------------
 
-FIXME
+Sometimes you want every object created by a particular form to have the same
+value for a particular field.  For instance, you might want to set the "Lead
+Source" field of a Lead to "Web".  This can be accomplished using the "Preset
+Field Values" setting.
+
+In the left column, enter the value you want to store in the field.  (e.g. "Web")
+
+In the right column, select the field in which the value should be stored. (e.g.
+Lead Source)
+
+If you need a more complicated expression in order to determine the value, you
+could instead create a hidden form field, edit its default value override
+expression, and map it using the form field mapping setting.
+
 
 Chained Adapters
 ----------------
 
-FIXME
+Salesforce-PloneFormGen adapters can be used to create multiple related
+objects from a single form.  e.g. creating a Contact linked to an Account:
 
-If you are using a version of Salesforce PFG Adapter that is >= version 1.5.x 
-and you configure a form that contains multiple "Salesforce Adapters", you 
-also have the ability to relate the resulting Salesforce.com provided unique 
-"Id" for each adapter to a field of your choosing on later executed adapters. 
-This is how one can create related Salesforce.com (via a lookup field, which 
-is conceptually similar to a foreign key) records from a single form.  Take 
-the following scenario as a visual example with to sObjects and their inherent
-schemas::
+-----------                -------------
+| Account |                | Contact   |
+-----------                -------------
+| Id      | -------------> | AccountId |
+| Name    |                | LastName  |
+-----------                -------------
 
- -----------                -------------
- | Account |                | Contact   |
- -----------                -------------
- | Id      | -------------> | AccountId |
- | Name    |                | LastName  |
- -----------                -------------
- 
-In the above scenario, the "Account" adapter will be run before the "Contact" 
-adapter regardless of ordering within the PloneFormGen form.  In this sense, 
+To create this link, the 'AccountId' external key of the Contact object needs
+to be set to the Id of the Account it should be associated with.  This can be
+accomplished with Salesforce-PloneFormGen by creating one Salesforce Adapter
+for the Account and one Salesforce adapter for the Contact, and then setting
+the "Configure Parent Adapters" setting of the contact adapter so that it maps
+the Id from the account adapter to the AccountId field of the Contact.
+
+In this setup, the Account adapter will be run before the Contact adapter
+regardless of ordering within the PloneFormGen form.  In this sense, 
 the "Contact" adapter is *dependent upon* the result from the "Account" 
 adapter. Upon creation of the "Account" within Salesforce.com an Id like 
 "01r600123009QiJ", will be returned along with the API response.  This will 
-then be saved and can be configured to be inserted into the "AccountId" field 
-for the "Contact" record that is next created. Care is taken via validation to
-ensure that "circularly dependent" adapters can not be accidentally 
-configured.
+then be saved and used by the Contact record which is created subsequently.
+Care is taken via validation that "circularly dependent" adapters can not be
+accidentally configured.
+
 
 Updating Existing Objects
 -------------------------
