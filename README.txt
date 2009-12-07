@@ -1,28 +1,61 @@
 Overview
 ========
 
-This product builds on top of the foundation for through the web form 
-creation provided by `PloneFormGen`_.
-If you are unfamiliar with PloneFormGen's capabilities and the problem
-space it intends to serve, we encourage you to start by downloading that
-and reading the README.txt file in the root of the product. In particular,
-the "Overview" and "Rationale For This Product" sections are recommended.
+The Salesforce-PloneFormGen adapter provides the ability to create, read and
+update in a Salesforce.com database via a PloneFormGen form.
+
+Using the wonderful foundation that is provided by `PloneFormGen`_ (and Plone for
+that matter), the task of creating a form that collects and validates some
+desired information is no longer a task that requires developer intervention,
+but can be done by the content editor with a decent grasp of the Plone user
+interface.  Having this data inside the CMS or emailed is only of limited use
+however.
 
 .. _PloneFormGen: http://plone.org/products/ploneformgen
 
-Once you've setup a suitable PloneFormGen form folder (and correctly
-installed and configured the Salesforce PFG Adapter and its dependencies), 
-you'll have the option of adding a new action adapter called a
-"Salesforce Adapter".
+Salesforce.com provides an extensible, powerful platform from which
+to do Customer Relationship Management (CRM) tasks ranging from sales,
+marketing, nonprofit constituent organizing, and customer service. The
+Salesforce PFG Adapter allows the pragmatic joining of a best of breed CMS
+and CRM so that each can focus on its own strengths in a way that is easy for
+non-developers to use.
 
-Once you've added a Salesforce PFG Adapter to your form, you're presented with 
-both "default" and "field mapping" (in addition to the standard "overrides") 
-management screens for editing the adapter. The default screen consists of a 
-drop-down menu populated with all the sObject types (i.e. Salesforce Objects) 
-found in the Salesforce.com instance that corresponds to the credentials
-entered when creating a Salesforce Base Connector in the ZMI. This should 
-include both standard and custom sObjects. 
- 
+Salesforce.com offers functionality called web-to-lead, but aside from 
+PloneFormGen's many strengths over the web-to-lead form builder this software 
+offers the following additional features:
+
+- Configurable validation of individual form fields
+- Ability to create as many different records as you'd like from the results 
+  of one form
+- Ability to create custom sObject records with your form
+- Ability to create whichever type of sObject records, whereas web-to-lead
+  creates a Lead record, which can only be converted to a Contact, Account, or
+  Opportunity record. Want to directly create a Campaign record from a form?  
+  That's fine.
+- Ability to create multiple records that are related to each other (i.e. 
+  create an Account record, then create a Contact record with the previously 
+  created Account's Id filling the Contact's AccountId field.)
+
+Usage
+=====
+
+Connecting a PloneFormGen form to Salesforce happens by adding a "Salesforce
+Adapter" to a PloneFormGen form folder.  Typically the site editor responsible
+for setting up the form will:
+
+ 1. Create a PloneFormGen form with the necessary fields.
+ 2. Add a Salesforce Adapter to the form via Plone's add menu.
+ 3. Configure the adapter by selecting:
+
+   * the type of Salesforce.com object the adapter should create or update
+   * the "field mapping" that specifies the correspondence between fields in
+     the form and fields in Salesforce.
+   * whether the adapter should create a new object, or edit an existing one
+     found by matching some expression.
+
+Mapping Form Fields
+-------------------
+
 Once you've chosen your sObject type, moving through to the "field mapping"
 management screen will display a two-column form for setting which Salesforce 
 field will be populated by each field on your form. Each field on your form is
@@ -42,6 +75,16 @@ a  mapping at any time, you'll want to recreate your desired mapping.  This is
 intended behavior, since the update would fail (or worse, produce very
 confusing results) if the previously selected sObject type's mapping were
 maintained.
+
+Preset Values
+-------------
+
+FIXME
+
+Chained Adapters
+----------------
+
+FIXME
 
 If you are using a version of Salesforce PFG Adapter that is >= version 1.5.x 
 and you configure a form that contains multiple "Salesforce Adapters", you 
@@ -69,39 +112,10 @@ for the "Contact" record that is next created. Care is taken via validation to
 ensure that "circularly dependent" adapters can not be accidentally 
 configured.
 
+Updating Existing Objects
+-------------------------
 
-Rationale For This Product
-==========================
-
-Using the wonderful foundation that is provided by PloneFormGen (and Plone for
-that  matter), the task of creating a form that collects and validates some
-desired information is no longer a task that requires developer intervention,
-but can be done by the content editor with a decent grasp of the Plone user
-interface.  Having this data inside the CMS or emailed is only of limited use
-however. 
-
-Salesforce.com provides an extensible, powerful platform from which
-to do Customer Relationship Management (CRM) tasks ranging from sales,
-marketing, nonprofit constituent organizing, and customer service. The
-Salesforce PFG Adapter symbolizes the pragmatic joining of a best of breed CMS
-and CRM so that each can focus on its own strengths in a way that is easy for
-non-developers to use.
-
-Salesforce.com offers functionality called web-to-lead, but aside from 
-PloneFormGen's many strengths over the web-to-lead form builder this software 
-offers the following additional features:
-
-- Configurable validation of individual form fields
-- Ability to create as many different records as you'd like from the results 
-  of one form
-- Ability to create custom sObject records with your form
-- Ability to create whichever type of sObject records, whereas web-to-lead
-  creates a Lead record, which can only be converted to a Contact, Account, or
-  Opportunity record. Want to directly create a Campaign record from a form?  
-  That's fine.
-- Ability to create multiple records that are related to each other (i.e. 
-  create an Account record, then create a Contact record with the previously 
-  created Account's Id filling the Contact's AccountId field.) 
+FIXME
 
 
 Dependencies
