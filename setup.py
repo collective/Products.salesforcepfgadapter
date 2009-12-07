@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import os
 
 version = '1.6.0'
 
@@ -7,7 +6,7 @@ setup(name='Products.salesforcepfgadapter',
       version=version,
       description="PloneFormGen adapter allowing for creation of arbitrary Salesforce.com \
         records based on data collected from a web form",
-      long_description=open(os.path.join("Products", "salesforcepfgadapter", "README.txt")).read() + "\n" + open(os.path.join('Products', 'salesforcepfgadapter', 'CHANGES.txt')).read(),
+      long_description=open("README.txt").read() + "\n" + open('CHANGES.txt').read(),
       # Get more strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
         "Programming Language :: Python",
