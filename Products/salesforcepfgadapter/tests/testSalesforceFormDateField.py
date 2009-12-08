@@ -6,11 +6,7 @@ import os, sys
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
-from Products.CMFCore.utils import getToolByName
-
 from Products.Archetypes.interfaces.field import IField
-
-from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
 
 from Products.salesforcepfgadapter.tests import base
 
@@ -55,12 +51,12 @@ class TestSalesforceFormDateFieldInteraction(base.SalesforcePFGAdapterTestCase):
     
         request = base.FakeRequest(topic = 'test subject', replyto='test@test.org',
                               date = now_plone)
-        fields = [fo for fo in self.ff1._getFieldObjects() if not IField.isImplementedBy(fo)]
+        fields = [self.ff1.date]
         sObject = self.ff1.salesforce._buildSObjectFromForm(fields, REQUEST=request)
     
         from time import strptime
         try:
-            res = strptime(sObject['date'], '%Y-%m-%dT%H:%M:%SZ')
+            strptime(sObject['date'], '%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
             self.fail("Doesn't look like the date was converted to Salesforce format properly.")
 

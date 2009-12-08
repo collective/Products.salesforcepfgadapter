@@ -1,12 +1,12 @@
 from Acquisition import aq_parent
 from zope.component import adapter
 
-from Products.salesforcepfgadapter import HAS_PLONE30
 from Products.salesforcepfgadapter import interfaces
 
-if HAS_PLONE30:
+try:
     from Products.Archetypes.interfaces import IObjectEditedEvent as IAdapterModifiedEvent
-else:
+except ImportError:
+    # BBB for Zope 2.9 / AT 1.4
     from zope.app.event.objectevent import IObjectModifiedEvent as IAdapterModifiedEvent
 
 SF_VIEW = 'object/@@sf_value'

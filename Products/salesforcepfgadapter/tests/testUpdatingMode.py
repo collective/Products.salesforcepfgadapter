@@ -14,10 +14,10 @@ from Products.ATContentTypes.tests.utils import FakeRequestSession
 from Products.Five.testbrowser import Browser
 from Products.salesforcepfgadapter.tests import base
 
-from Products.salesforcepfgadapter import HAS_PLONE30
-if HAS_PLONE30:
+try:
     from Products.Archetypes.event import ObjectEditedEvent as AdapterModifiedEvent
-else:
+except ImportError:
+    # BBB Zope 2.9 / AT 1.4
     from zope.app.event.objectevent import ObjectModifiedEvent as AdapterModifiedEvent
 
 

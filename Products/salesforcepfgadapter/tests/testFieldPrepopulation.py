@@ -15,10 +15,10 @@ from Products.salesforcepfgadapter.tests import base
 from Products.salesforcepfgadapter.prepopulator import FieldValueRetriever
 from Products.salesforcepfgadapter.config import SESSION_KEY
 
-from Products.salesforcepfgadapter import HAS_PLONE30
-if HAS_PLONE30:
+try:
     from Products.Archetypes.event import ObjectEditedEvent as AdapterModifiedEvent
-else:
+except ImportError:
+    # BBB Zope 2.9 / AT 1.4
     from zope.app.event.objectevent import ObjectModifiedEvent as AdapterModifiedEvent
 
 class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase):
@@ -83,7 +83,6 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.ff1.invokeFactory('FieldsetFolder', 'fieldset')
         fieldset = self.ff1.fieldset
         fieldset.invokeFactory('FormStringField', 'foo')
-        fieldset_field = fieldset.foo
         
         self.sfa.setSFObjectType('Contact')
         self.sfa.setFieldMap(self.test_fieldmap)
@@ -98,7 +97,6 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         self.ff1.invokeFactory('FieldsetFolder', 'fieldset')
         fieldset = self.ff1.fieldset
         fieldset.invokeFactory('FormLabelField', 'foo')
-        fieldset_field = fieldset.foo
         
         self.sfa.setSFObjectType('Contact')
         self.sfa.setFieldMap(self.test_fieldmap)

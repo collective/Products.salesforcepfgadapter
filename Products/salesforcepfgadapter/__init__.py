@@ -63,9 +63,17 @@ except ImportError:
     HAS_PLONE25 = False
 else:
     HAS_PLONE25 = True
+
 try:
     from Products.CMFPlone.migrations import v3_0
 except ImportError:
     HAS_PLONE30 = False
 else:
     HAS_PLONE30 = True
+
+try:
+    from plone.app.upgrade import v40
+except ImportError:
+    HAS_PLONE40 = False
+else:
+    HAS_PLONE25 = HAS_PLONE30 = HAS_PLONE40 = True
