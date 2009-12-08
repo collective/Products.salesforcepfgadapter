@@ -6,8 +6,6 @@ import os, sys
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
 
-from Products.Archetypes.interfaces.field import IField
-
 from Products.salesforcepfgadapter.tests import base
 
 
@@ -70,7 +68,7 @@ class TestSalesforceFormDateFieldInteraction(base.SalesforcePFGAdapterTestCase):
         # look like the following in the request:
         request = base.FakeRequest(topic = 'test subject', replyto='test@test.org', date = '')
     
-        fields = [fo for fo in self.ff1._getFieldObjects() if not IField.isImplementedBy(fo)]
+        fields = [self.ff1.date]
     
         # attempt to build the object which would trigger
         # SyntaxError: Unable to parse (' GMT+0',), {}
