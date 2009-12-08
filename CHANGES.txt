@@ -11,7 +11,7 @@ Changelog
   found by matching an arbitrary expression.
   [davisagli]
 
-- Restored Plone 2.5 support.
+- Restored Plone 2.5 support and added compatibility with Plone 4.
   [davisagli]
 
 - Added a 'Preset field values' setting so that hardcoded values can be mapped

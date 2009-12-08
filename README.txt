@@ -179,7 +179,7 @@ not yet defined.
 Dependencies
 ============
 
-Tested with Plone 2.5.x and 3.x.
+Tested with Plone 2.5.x, 3.x, and 4.0a2.
 
 Depends upon the beatbox library >= 16.0, which is a Python wrapper to the
 Salesforce.com API.  You must have a Salesforce.com account that provides API
