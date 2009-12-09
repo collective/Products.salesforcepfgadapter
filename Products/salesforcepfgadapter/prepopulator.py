@@ -31,7 +31,7 @@ class FieldValueRetriever(BrowserView):
         self.context = context
         self.request = request
         self.form = self.getForm()
-        if not hasattr(request, config.REQUEST_KEY) and self.form.absolute_url() not in request.get('HTTP_REFERER', ''):
+        if not hasattr(request, config.REQUEST_KEY) and not request.get('HTTP_REFERER', '').startswith(self.form.absolute_url()):
             # clear session if first load
             sf_adapters = self._getSFAdapters()
             for sfa in sf_adapters:
@@ -150,11 +150,12 @@ class FieldValueRetriever(BrowserView):
         Returns the SF adapter that is already in use for this request,
         or else looks for one that maps this field
         """
-        pfg = self.form
         field_path = self.getFieldPath()
         
         # find a Salesforce adapter in this form that maps this field
         for sfa in self._getSFAdapters():
+            if sfa.getCreationMode() != 'update':
+                continue
             field_map = sfa.getFieldMap()
             if field_path in [f['field_path'] for f in field_map if f.get('sf_field', None)]:
                 return sfa

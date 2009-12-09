@@ -27,8 +27,7 @@ def _set_default(sf_adapter, new_default):
     form_folder = aq_parent(sf_adapter)
     mappings = sf_adapter.getFieldMap()
     for m in mappings:
-        # we check m.keys() instead of just m here for Plone 2.5 BBB
-        if 'sf_field' in m.keys():
+        if m.get('sf_field', None):
             field_path = m['field_path'].replace(',', '/')
             try:
                 field = form_folder.restrictedTraverse(field_path)

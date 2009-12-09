@@ -292,10 +292,10 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 if len(sObject.keys()) > 1:
                     salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
                     
-                    if self.getCreationMode() == 'update':
+                    if adapter.getCreationMode() == 'update':
                         # get the user's SF UID from the session
                         try:
-                            uid = self._userIdToUpdate(adapter)
+                            uid = adapter._userIdToUpdate()
                         except KeyError:
                             error_msg = _(u'Session expired. Unable to process form. Please try again.')
                             IStatusMessage(REQUEST).addStatusMessage(error_msg)
@@ -328,8 +328,8 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 else:
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
     
-    def _userIdToUpdate(self, adapter):
-        return self.REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())][0]
+    def _userIdToUpdate(self):
+        return self.REQUEST.SESSION[(config.SESSION_KEY, self.UID())][0]
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form

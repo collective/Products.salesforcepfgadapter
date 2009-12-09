@@ -175,6 +175,25 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.assertEqual(1, res['size'])
         self.assertEqual('PloneTestCaseChanged', res[0].LastName)
         self.assertEqual(account_id, res[0].AccountId)
+        
+        # now put the contact adapter in create mode, and make sure that works
+        # too
+        self.ff1.contact_adapter.setCreationMode('create')
+        notify(AdapterModifiedEvent(self.ff1.contact_adapter))
+        browser.open('http://nohost/plone/ff1')
+        self.assertEqual(browser.getControl(name='account_name').value, 'Changed Test Account')
+        self.assertEqual(browser.getControl(name='comments').value, '')
+        self.assertEqual(browser.getControl(name='replyto').value, '')
+        browser.getControl(name='account_name').value = 'Test Account'
+        browser.getControl(name='comments').value = 'PloneTestCase'
+        browser.getControl(name='replyto').value = 'plonetestcase2@plone.org'
+        browser.getControl('Submit').click()
+        res = self.salesforce.query(['Id', 'AccountId'], 'Contact',
+                                    "LastName='PloneTestCase'")
+        self._todelete.append(res[0].Id)
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].AccountId, account_id)
+        self._todelete.append(res[0].Id)
 
     def testUpdateModeCreateIfNoMatch(self):
         self._assertNoExistingTestContact()

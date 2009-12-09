@@ -85,7 +85,11 @@ class TestFieldPrepopulationSetting(base.SalesforcePFGAdapterFunctionalTestCase)
         fieldset.invokeFactory('FormStringField', 'foo')
         
         self.sfa.setSFObjectType('Contact')
-        self.sfa.setFieldMap(self.test_fieldmap)
+        fieldmap = list(self.test_fieldmap)
+        fieldmap.append({
+            'field_path': 'fieldset,foo', 'form_field': '', 'sf_field': 'Description'
+            })
+        self.sfa.setFieldMap(fieldmap)
         self.sfa.setCreationMode('update')
         self.sfa.setUpdateMatchExpression('string:foobar')
         notify(AdapterModifiedEvent(self.sfa))
