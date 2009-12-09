@@ -16,6 +16,9 @@ def sanitize_soql(s):
     """
     return s.replace("'", "\\'")
 
+class ExpressionChanged(Exception):
+    pass
+
 class FieldValueRetriever(BrowserView):
     """
     Retrieves a default field value by querying Salesforce.
@@ -46,10 +49,6 @@ class FieldValueRetriever(BrowserView):
             data = self.retrieveData()
             all_data[sfa.UID()] = data
             setattr(self.request, config.REQUEST_KEY, all_data)
-            obj_id = None
-            if 'Id' in data:
-                obj_id = data['Id']
-            self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = obj_id
         else:
             data = all_data[sfa.UID()]
 
@@ -75,14 +74,19 @@ class FieldValueRetriever(BrowserView):
         fieldList.append('Id')
 
         try:
-            obj_id = self.request.SESSION[(config.SESSION_KEY, sfa.UID())]
-        except (AttributeError, KeyError):
+            (obj_id, oldUpdateMatchExpression) = self.request.SESSION[(config.SESSION_KEY, sfa.UID())]
+            if obj_id is None:
+                raise ExpressionChanged
+            if oldUpdateMatchExpression != 'CREATED' and oldUpdateMatchExpression != updateMatchExpression:
+                raise ExpressionChanged
+        except (AttributeError, KeyError, ExpressionChanged):
             # find item using expression
             query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
         else:
             if obj_id is not None:
                 query = "SELECT %s FROM %s WHERE Id='%s'" % (', '.join(fieldList), sObjectType, obj_id)
             else:
+                self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (None, updateMatchExpression)
                 return {}
 
         res = sfbc.query(query)
@@ -91,6 +95,7 @@ class FieldValueRetriever(BrowserView):
             if sfa.getActionIfNoExistingObject() == 'abort':
                 error_msg = _(u'Could not find item to edit.')
             else:
+                self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (None, updateMatchExpression)
                 return {}
         if len(res['records']) > 1:
             error_msg = _(u'Multiple items found; unable to determine which one to edit.')
@@ -101,6 +106,7 @@ class FieldValueRetriever(BrowserView):
             mtool = getToolByName(self.context, 'portal_membership')
             if mtool.checkPermission('Modify portal content', self.form):
                 # user needs to be able to edit form
+                self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (None, updateMatchExpression)
                 return {}
             else:
                 # user shouldn't see form
@@ -116,6 +122,12 @@ class FieldValueRetriever(BrowserView):
                 # make sure that the date gets stored with a timezone
                 value = str(value) + ' ' + DateTime().localZone()
             data[m['field_path']] = value
+        
+        obj_id = None
+        if 'Id' in data:
+            obj_id = data['Id']
+        self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (obj_id, updateMatchExpression)
+
         return data
 
     def getForm(self):

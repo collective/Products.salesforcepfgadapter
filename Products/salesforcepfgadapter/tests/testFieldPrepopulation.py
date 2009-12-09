@@ -138,6 +138,7 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self.sfa.setUpdateMatchExpression("""python:"Email='" + sanitize_soql('archimedes@doe.com') + "'" """)
         notify(AdapterModifiedEvent(self.sfa))
         
+        self.app.REQUEST.SESSION = {}
         self._todelete = []
 
     def _createTestContact(self):
@@ -190,7 +191,6 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
     
     def testCallingMultipleRetrieversInARequestCaches(self):
         self._createTestContact()
-        self.app.REQUEST.SESSION = {}
         
         retriever = FieldValueRetriever(self.ff1.replyto, self.app.REQUEST)
         lastname = retriever()
@@ -221,9 +221,27 @@ class TestFieldValueRetriever(base.SalesforcePFGAdapterFunctionalTestCase):
         self._createTestContact()
         self._createTestContact()
         self.app.REQUEST.set('HTTP_REFERER', self.ff1.absolute_url())
-        self.app.REQUEST.SESSION = {(SESSION_KEY, self.sfa.UID()): self._todelete[-1]}
+        self.app.REQUEST.SESSION = {(SESSION_KEY, self.sfa.UID()): (self._todelete[-1], "Email='archimedes@doe.com'")}
         retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
         self.assertEqual(retriever(), 'Doe')
+    
+    def testDontUseObjectIdFromSessionIfExpressionChanged(self):
+        # if the update match expression evaluates to something different than it did
+        # when the object id was stored in the session, don't use the stored id
+        self._createTestContact()
+        self._createTestContact()
+        self.app.REQUEST.set('HTTP_REFERER', self.ff1.absolute_url())
+        self.app.REQUEST.SESSION = {(SESSION_KEY, self.sfa.UID()): (self._todelete[-1], "Email='archimedes@doe.com'")}
+        retriever = FieldValueRetriever(self.ff1.lastname, self.app.REQUEST)
+        # this one should not fail, because we're using the oid from the session
+        self.assertEqual(retriever(), 'Doe')
+        # now let's confirm that if a different expression is stored in the
+        # session, then the populator will try a fresh match and fail due to
+        # finding the multiple contacts we created
+        self.app.REQUEST.SESSION = {(SESSION_KEY, self.sfa.UID()): (self._todelete[-1], "Email='socrates@doe.com'")}
+        retriever.retrieveData()
+        self.assertEqual(IStatusMessage(self.app.REQUEST).showStatusMessages()[0].message,
+            u'Multiple items found; unable to determine which one to edit.')
     
     def testDateTimeWidgetRendersRetrievedDate(self):
         self._createTestContact()

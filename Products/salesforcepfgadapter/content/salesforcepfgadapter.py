@@ -319,7 +319,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                                      (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
                         uids[adapter.getId()] = result['id']
 
-                        REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())] = result['id']
+                        REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())] = (result['id'], 'CREATED')
 
                     else:
                         errorStr = 'Failed to %s %s in Salesforce: %s' % \
@@ -329,7 +329,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     logger.warn('No valid field mappings found. Not calling Salesforce.')
     
     def _userIdToUpdate(self, adapter):
-        return self.REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())]
+        return self.REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())][0]
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form
