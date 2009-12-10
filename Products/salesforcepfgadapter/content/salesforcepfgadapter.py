@@ -305,7 +305,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                             sObject['Id'] = uid
                             result = salesforce.update(sObject)[0]
                         else:
-                            if self.getActionIfNoExistingObject() == 'create':
+                            if adapter.getActionIfNoExistingObject() == 'create':
                                 result = salesforce.create(sObject)[0]
                             else:
                                 error_msg = _(u'Could not find item to edit.')
