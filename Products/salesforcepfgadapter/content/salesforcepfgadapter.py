@@ -527,10 +527,11 @@ class SalesforcePFGAdapter(FormActionAdapter):
         for k, v in sfFields.items():
             # determine whether each field is required and mark appropriately
             
-            if v.nillable or v.defaultedOnCreate or not v.createable:
-                fieldList.append((k, k))
-            else:
-                fieldList.append((k, str("%s %s" % (k, REQUIRED_MARKER))))
+            if v.updateable:
+                if v.nillable or v.defaultedOnCreate or not v.createable:
+                    fieldList.append((k, k))
+                else:
+                    fieldList.append((k, str("%s %s" % (k, REQUIRED_MARKER))))
         # We provide our own custom sort mechanism
         # rather than relying on DisplayList's because we
         # want all required fields to appear first in the

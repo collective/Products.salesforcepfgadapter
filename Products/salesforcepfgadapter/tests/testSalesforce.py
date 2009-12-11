@@ -40,7 +40,6 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
 
         # make sure that our adapter is contained w/in the form
         self.failUnless('salesforce' in self.ff1.objectIds())
-        salesforce = self.ff1.salesforce
 
         # set our action adapter and assert that it works
         self.ff1.setActionAdapter( ('salesforce',) )
@@ -157,12 +156,15 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         fieldInfo = self.salesforce.describeSObjects(chosenSObject)[0].fields
         
         for k,v in fieldInfo.items():
-            if v.nillable or v.defaultedOnCreate or not v.createable:
-                self.failIf(REQUIRED_MARKER in objectFieldOptions.getValue(k), 
-                    "Field %s is marked required and should not be for the %s SObject" % (k, chosenSObject))
+            if not v.updateable:
+                self.failIf(k in objectFieldOptions.keys())
             else:
-                self.failUnless(REQUIRED_MARKER in objectFieldOptions.getValue(k), 
-                    "Field %s is NOT marked required and should be for the %s SObject" % (k, chosenSObject))
+                if v.nillable or v.defaultedOnCreate or not v.createable:
+                    self.failIf(REQUIRED_MARKER in objectFieldOptions.getValue(k), 
+                        "Field %s is marked required and should not be for the %s SObject" % (k, chosenSObject))
+                else:
+                    self.failUnless(REQUIRED_MARKER in objectFieldOptions.getValue(k), 
+                        "Field %s is NOT marked required and should be for the %s SObject" % (k, chosenSObject))
     
     def testRequiredFieldsFloatToTopOfList(self):
         """As a convenience to the user, we put an 

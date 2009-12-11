@@ -3,7 +3,11 @@ Changelog
 
 1.6b2 (unreleased)
 
-- Remove obsolete actions from the type configuration.  This closes issue #16.
+- Don't show read-only fields as options in the field mapping UI. This closes
+  issue #14.
+  [davisagli]
+
+- Remove obsolete actions from the type configuration. This closes issue #16.
   [davisagli]
 
 - Allow mapping the filename and mimetype of file uploads to fields in SFDC
