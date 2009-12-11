@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.6.0 (unreleased)
+
+
 1.6b2 (2009-12-11)
 
 - Don't show read-only fields as options in the field mapping UI. This closes
