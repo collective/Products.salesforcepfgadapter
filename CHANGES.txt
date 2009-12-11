@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.6b2 (unreleased)
+1.6b2 (2009-12-11)
 
 - Don't show read-only fields as options in the field mapping UI. This closes
   issue #14.
@@ -15,7 +15,7 @@ Changelog
   [davisagli]
 
 - Added ability to view and update values from existing Salesforce objects,
-  found by matching an arbitrary expression.
+  found by matching an arbitrary expression.  See the README for details.
   [davisagli]
 
 - Restored Plone 2.5 support and added compatibility with Plone 4.
