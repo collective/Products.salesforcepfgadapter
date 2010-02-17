@@ -3,6 +3,9 @@ Changelog
 
 1.6.0 (unreleased)
 
+- Code defensively so that the SFPFG adapter modified handler doesn't fail
+  when encountering adapter subclasses that don't have a 'creationMode' field.
+  [davisagli]
 
 1.6b2 (2009-12-11)
 

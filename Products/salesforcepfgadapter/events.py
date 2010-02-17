@@ -1,4 +1,4 @@
-from Acquisition import aq_parent
+from Acquisition import aq_parent, aq_base
 from zope.component import adapter
 
 from Products.salesforcepfgadapter import interfaces
@@ -47,6 +47,8 @@ def handle_adapter_saved(sf_adapter, event):
     """On save, check if fields should be prepopulated from Salesforce.
        If so, set the default TAL expression to our custom browser view.
     """
+    if not hasattr(aq_base(sf_adapter), 'getCreationMode'):
+        return
     if _sf_defaults_activated(sf_adapter):
         _set_default(sf_adapter, SF_VIEW)
     else:
