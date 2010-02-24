@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.6.0 (unreleased)
+1.6.0 (2010-02-24)
 
 - Fix a regression from hiding read-only fields from the UI -- createable
   fields still need to be an option even if they aren't updateable. This
