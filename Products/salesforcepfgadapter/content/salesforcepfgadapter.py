@@ -527,7 +527,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
         for k, v in sfFields.items():
             # determine whether each field is required and mark appropriately
             
-            if v.updateable:
+            if v.updateable or v.createable:
                 if v.nillable or v.defaultedOnCreate or not v.createable:
                     fieldList.append((k, k))
                 else:

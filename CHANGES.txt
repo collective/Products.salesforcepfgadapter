@@ -3,6 +3,11 @@ Changelog
 
 1.6.0 (unreleased)
 
+- Fix a regression from hiding read-only fields from the UI -- createable
+  fields still need to be an option even if they aren't updateable. This
+  closes http://plone.org/products/salesforcepfgadapter/issues/17
+  [davisagli]
+
 - Code defensively so that the SFPFG adapter modified handler doesn't fail
   when encountering adapter subclasses that don't have a 'creationMode' field.
   [davisagli]

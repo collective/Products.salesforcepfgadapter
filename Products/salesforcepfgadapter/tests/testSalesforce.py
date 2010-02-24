@@ -156,7 +156,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         fieldInfo = self.salesforce.describeSObjects(chosenSObject)[0].fields
         
         for k,v in fieldInfo.items():
-            if not v.updateable:
+            if not v.updateable and not v.createable:
                 self.failIf(k in objectFieldOptions.keys())
             else:
                 if v.nillable or v.defaultedOnCreate or not v.createable:
