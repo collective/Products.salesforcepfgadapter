@@ -3,6 +3,8 @@ Changelog
 
 1.6.1 (unreleased)
 
+- Add support for TALES expressions in the preset value map.
+  [davisagli]
 
 1.6.0 (2010-02-24)
 

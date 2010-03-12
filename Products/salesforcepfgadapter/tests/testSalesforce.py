@@ -2,6 +2,7 @@
 #
 
 import os, sys
+import datetime
 
 if __name__ == '__main__':
     execfile(os.path.join(sys.path[0], 'framework.py'))
@@ -636,6 +637,44 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
 
         # make our assertions
         self.failIf(lead_res['records'][0]['NumberOfEmployees'])
+
+    def testPresetValueMapExpressions(self):
+        """Ensure that our Salesforce Adapter mapped objects
+           find their way into the appropriate Salesforce.com
+           instance.
+        """
+        # create our action adapter
+        self.ff1.invokeFactory('SalesforcePFGAdapter', 'contact_adapter')
+        # disable mailer adapter
+        self.ff1.setActionAdapter(('contact_adapter',))
+        # configure our action adapter to create a contact on submission,
+        # exercising various expression formats
+        self.ff1.contact_adapter.setTitle('Salesforce Action Adapter')
+        self.ff1.contact_adapter.setSFObjectType('Contact')
+        self.ff1.contact_adapter.setPresetValueMap((
+            {'value': 'PloneTestCase', 'sf_field': 'LastName'},
+            {'value': 'path:context/portal_url', 'sf_field': 'Description'},
+            {'value': 'python:now', 'sf_field': 'Birthdate'},
+            ))
+        # build the request and submit the form
+        fields = self.ff1._getFieldObjects()
+        request = base.FakeRequest()
+        request.SESSION = {}
+        self.ff1.contact_adapter.onSuccess(fields, request)
+        
+        # direct query of Salesforce to get the id of the newly created contact
+        res = self.salesforce.query(
+            "SELECT Id, LastName, Description, Birthdate FROM %s WHERE LastName='%s'" % (
+                self.ff1.contact_adapter.getSFObjectType(),
+                'PloneTestCase')
+            )
+        self._todelete.append(res['records'][0]['Id'])
+        
+        # check the stored values
+        self.assertEqual(1, res['size'])
+        self.assertEqual('PloneTestCase', res[0].LastName)
+        self.failUnless(res[0].Description.startswith('http://'))
+        self.failUnless(isinstance(res[0].Birthdate, datetime.date))
 
 def test_suite():
     from unittest import TestSuite, makeSuite

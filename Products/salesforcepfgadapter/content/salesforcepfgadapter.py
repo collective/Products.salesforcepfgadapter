@@ -8,7 +8,7 @@
 __author__  = ''
 __docformat__ = 'plaintext'
 
-# Python imorts
+# Python imports
 import logging
 
 # Zope imports
@@ -27,10 +27,11 @@ except ImportError:
     from zope.app.content_types import guess_content_type
 
 # CMFCore
-from Products.CMFCore.Expression import getExprContext
+from Products.CMFCore.Expression import Expression
 
 # Plone imports
 from Products.CMFPlone.utils import safe_hasattr
+from Products.CMFPlone.PloneBaseTool import getExprContext
 from Products.Archetypes.public import StringField, StringWidget, \
     SelectionWidget, DisplayList, Schema, ManagedSchema
 
@@ -125,7 +126,12 @@ schema = FormAdapterSchema.copy() + Schema((
         allow_reorder = False,
         widget = DataGridWidget(
             label=_(u'Preset field values'),
-            description=_(u"You may optionally configure additional values that should be mapped to Salesforce fields.  The same value will be passed each time the form is submitted.  For example, this could be used to set the LeadSource for a new Lead to 'web'."),
+            description=_(u"You may optionally configure additional values that should be mapped "
+                          u"to Salesforce fields.  The same value will be passed each time the form "
+                          u"is submitted.  For example, this could be used to set the LeadSource for "
+                          u"a new Lead to 'web'.  You may also use TALES path expressions (starting "
+                          u"with 'path:') or Python expressions (starting with 'python:').  Use 'now' "
+                          u"to submit the current time."),
             columns={
                 'value': Column('Value'),
                 'sf_field': SelectColumn('Salesforce Field',
@@ -250,6 +256,23 @@ class SalesforcePFGAdapter(FormActionAdapter):
         # This way we don't query Salesforce for every field on our form.
         self._fieldsForSFObjectType = {}
     
+    security.declarePrivate('_evaluateExpression')
+    def _evaluateExpression(self, expr):
+        evaluate = False
+        if expr.startswith('path:'):
+            expr = expr[5:]
+            evaluate = True
+        if expr.startswith('python:'):
+            evaluate = True
+        if expr.startswith('string:'):
+            evaluate = True
+        
+        if evaluate:
+            econtext = getExprContext(self, self)
+            econtext.setGlobal('now', DateTime().ISO8601())
+            return Expression(expr)(econtext)
+        return expr
+    
     security.declareProtected(View, 'onSuccess')
     def onSuccess(self, fields, REQUEST=None):
         """ The essential method of a PloneFormGen Adapter:
@@ -287,7 +310,8 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 # add in the preset values
                 for mapping in adapter.getPresetValueMap():
                     if len(mapping):
-                        sObject[mapping['sf_field']] = mapping['value']
+                        value = self._evaluateExpression(mapping['value'])
+                        sObject[mapping['sf_field']] = value
 
                 if len(sObject.keys()) > 1:
                     salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
@@ -704,4 +728,3 @@ try:
     classImplements(SalesforcePFGAdapter, IMultiPageSchema)
 except ImportError:
     pass
-
