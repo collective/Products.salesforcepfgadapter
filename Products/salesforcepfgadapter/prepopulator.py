@@ -119,8 +119,8 @@ class FieldValueRetriever(BrowserView):
                 continue
             value = res['records'][0][m['sf_field']]
             if isinstance(value, date):
-                # make sure that the date gets stored with a timezone
-                value = str(value) + ' ' + DateTime().localZone()
+                # make sure that the date gets interpreted as UTC
+                value = str(value) + ' +00:00'
             data[m['field_path']] = value
         
         obj_id = None

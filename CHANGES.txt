@@ -3,6 +3,10 @@ Changelog
 
 1.6.1 (unreleased)
 
+- Fix regression in Plone 4 of timezone handling of datetimes when
+  prepopulating fields.
+  [davisagli]
+
 - Add support for TALES expressions in the preset value map.
   [davisagli]
 
