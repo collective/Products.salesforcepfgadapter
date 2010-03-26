@@ -3,6 +3,9 @@ Changelog
 
 1.6.1 (unreleased)
 
+- Fix regressions in Plone 2.5.
+  [davisagli]
+
 - Fix regression in Plone 4 of timezone handling of datetimes when
   prepopulating fields.
   [davisagli]

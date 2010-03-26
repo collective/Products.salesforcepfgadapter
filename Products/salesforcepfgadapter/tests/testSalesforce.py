@@ -653,7 +653,7 @@ class TestSalesforcePFGAdapter(base.SalesforcePFGAdapterTestCase):
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setPresetValueMap((
             {'value': 'PloneTestCase', 'sf_field': 'LastName'},
-            {'value': 'path:context/portal_url', 'sf_field': 'Description'},
+            {'value': 'path:object/portal_url', 'sf_field': 'Description'},
             {'value': 'python:now', 'sf_field': 'Birthdate'},
             ))
         # build the request and submit the form
