@@ -70,18 +70,20 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         self.ff1.replyto.setFgTDefault('')
         self.ff1.replyto.setFgDefault('')
         
+        # Make topic optional so that we can test erasing values.
+        self.ff1.topic.setRequired(False)
+                
         # configure our action adapter to create a contact on submission
         # last name is the lone required field
         self.ff1.contact_adapter.setTitle('Salesforce Action Adapter')
         self.ff1.contact_adapter.setSFObjectType('Contact')
         self.ff1.contact_adapter.setFieldMap((
             {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
-            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'}))
+            {'field_path': 'comments', 'form_field': 'Comments', 'sf_field': 'LastName'},
+            {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'Phone'},))
         self.ff1.contact_adapter.setCreationMode('update')
         self.ff1.contact_adapter.setUpdateMatchExpression("string:Email='plonetestcase@plone.org'")
         notify(AdapterModifiedEvent(self.ff1.contact_adapter))
-        
-        self.ff1.manage_delObjects(['topic'])
         
         self.portal.portal_workflow.doActionFor(self.ff1, 'publish')
         
@@ -359,7 +361,54 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
             self._todelete.append(item['Id'])
         self.assertEqual(1, res['size'])
         self.assertEqual('New PloneTestCase', res['records'][0]['LastName'])
+        
+    def testUpdateNullifiesEmptyFields(self):
+        """
+        Tests that, in update mode, empty fields overwrite existing data
+        with a null value.
+        """
+        
+        self._createTestContact()
+        
+        # Set actionIfNoExistingObject to 'abort.'
+        self.ff1.contact_adapter.setActionIfNoExistingObject('abort')
+        notify(AdapterModifiedEvent(self.ff1.contact_adapter))
+        
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        
+        browser.getControl(name='replyto').value = 'plonetestcase@plone.org'
+        browser.getControl(name='comments').value = 'PloneTestCase'
+        browser.getControl(name='topic').value = '(123) 456-7890'
+        browser.getControl('Submit').click()
+        
+        # Now there should be one (new) record.
+        query_tuple = (['Id','LastName','Phone'],
+            self.ff1.contact_adapter.getSFObjectType(),
+            "Email='plonetestcase@plone.org'")
+        res = self.salesforce.query(*query_tuple)
+        
+        for item in res['records']:
+            self._todelete.append(item['Id'])
+        self.assertEqual(1, res['size'])
+        self.assertEqual('PloneTestCase', res['records'][0]['LastName'])
+        self.assertEqual('(123) 456-7890', res['records'][0]['Phone'])
+        
+        # We can now update the item by removing the phone number.
+        browser.open('http://nohost/plone/ff1')
+        self.assertEqual('(123) 456-7890', browser.getControl(name='topic').value)
+        browser.getControl(name='topic').value = ''
+        browser.getControl('Submit').click()
+        
+        # The record should now contain an empty phone number.
+        query_tuple = (['Id','LastName','Phone'],
+            self.ff1.contact_adapter.getSFObjectType(),
+            "Email='plonetestcase@plone.org'")
+        res = self.salesforce.query(*query_tuple)
 
+        self.assertEqual(1, res['size'])
+        self.assertEqual('PloneTestCase', res['records'][0]['LastName'])
+        self.assertEqual('', res['records'][0]['Phone'])
 
 def test_suite():
     from unittest import TestSuite, makeSuite

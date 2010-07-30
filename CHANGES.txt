@@ -3,6 +3,9 @@ Changelog
 
 1.6.2 (unreleased)
 
+- Properly handle blank form fields in update mode by nullifying the
+  corresponding Salesforce field.
+  [yomatters]
 
 1.6.1 (2010-03-26)
 
