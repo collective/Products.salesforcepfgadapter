@@ -397,7 +397,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 # We haven't found a mapping to a Salesforce field.
                 continue
             
-            if self.getCreationMode() == 'update' and formFieldValue == '':
+            if hasattr(self, 'getCreationMode') and self.getCreationMode() == 'update' and formFieldValue == '':
                 # The adapter is in update mode and one of the fields has a value
                 # of an empty string. If that field is nillable in Salesforce, we
                 # should set its value to None so that it gets cleared.

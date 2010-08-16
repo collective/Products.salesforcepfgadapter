@@ -3,6 +3,9 @@ Changelog
 
 1.6.3 (unreleased)
 
+- Fix regression introduced in 1.6.2 for salesforcepfgadapter subclasses
+  that don't provide the creationMode field.
+  [davisagli]
 
 1.6.2 (2010-08-03)
 
