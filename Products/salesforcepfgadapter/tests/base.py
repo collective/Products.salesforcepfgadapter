@@ -1,14 +1,11 @@
-import transaction
-
 # Import the base test case classes
 from Testing import ZopeTestCase as ztc
 from Products.CMFPlone.tests import PloneTestCase as ptc
 from Products.Five import zcml
 from Products.Five import fiveconfigure
 from Products.PloneTestCase.layer import onsetup
-from Products.CMFCore.utils import getToolByName
 
-from Products.salesforcebaseconnector.tests import sfconfig   # get login/pw
+from Products.salesforcebaseconnector.tests.layer import SalesforcePloneLayer
 
 import Products.salesforcepfgadapter
 
@@ -30,34 +27,16 @@ def load_zcml():
     zcml.load_config('configure.zcml', Products.salesforcepfgadapter)
     fiveconfigure.debug_mode = False
 
-@onsetup
-def setup_salesforce_base_connector():
-    """Install, Add, and Configure Salesforce Base Connector
-       on a layer, so that we don't need to repetitively do 
-       this prior to each test case run.
-    """ 
-    # get our plone site
-    app = ztc.app()
-    plone = app.plone
-    
-    # setup base connector
-    plone.manage_addProduct['salesforcebaseconnector'].manage_addTool('Salesforce Base Connector', None)
-    toolbox = getToolByName(plone, "portal_salesforcebaseconnector")
-    toolbox.setCredentials(sfconfig.USERNAME, sfconfig.PASSWORD)
-    
-    # commit transaction, close connection to app ZODB
-    transaction.commit()
-    ztc.close(app)
-
 load_zcml()
 ptc.setupPloneSite(products=PRODUCTS)
-setup_salesforce_base_connector()
 
 class SalesforcePFGAdapterTestCase(ptc.PloneTestCase):
     """Base class for integration tests for the 'salesforcepfgadapter' product. This may
     provide specific set-up and tear-down operations, or provide convenience
     methods.
     """
+    layer = SalesforcePloneLayer
+    
     def afterSetUp(self):
         self.salesforce = self.portal.portal_salesforcebaseconnector
         self._todelete = list() # keep track of ephemeral test data to delete
@@ -66,6 +45,8 @@ class SalesforcePFGAdapterTestCase(ptc.PloneTestCase):
 class SalesforcePFGAdapterFunctionalTestCase(ptc.FunctionalTestCase):
     """Base class for functional doctests
     """
+    layer = SalesforcePloneLayer
+    
     def afterSetUp(self):
         ztc.utils.setupCoreSessions(self.app)
         
