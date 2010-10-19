@@ -1,14 +1,9 @@
-from DateTime import DateTime
-from datetime import date
 from zExceptions import Redirect
 from Acquisition import aq_inner, aq_parent
 from Products.PloneFormGen.interfaces import IPloneFormGenForm
 from Products.Five import BrowserView
-from Products.CMFCore.Expression import getExprContext
-from Products.CMFCore.utils import getToolByName
 from Products.statusmessages.interfaces import IStatusMessage
 from Products.salesforcepfgadapter import config
-from Products.salesforcepfgadapter import SalesforcePFGAdapterMessageFactory as _
 
 def sanitize_soql(s):
     """ Sanitizes a string that will be interpolated into single quotes
@@ -57,78 +52,11 @@ class FieldValueRetriever(BrowserView):
         return data.get(field_path, None)
 
     def retrieveData(self):
-        sfbc = getToolByName(self.context, 'portal_salesforcebaseconnector')
         sfa = self.getRelevantSFAdapter()
         if sfa is None:
             return {}
         
-        sObjectType = sfa.getSFObjectType()
-        econtext = getExprContext(sfa)
-        econtext.setGlobal('sanitize_soql', sanitize_soql)
-        updateMatchExpression = sfa.getUpdateMatchExpression(expression_context = econtext)
-        mappings = sfa.getFieldMap()
-
-        # determine which fields to retrieve
-        fieldList = [m['sf_field'] for m in mappings if m['sf_field']]
-        # we always want the ID
-        fieldList.append('Id')
-
-        try:
-            (obj_id, oldUpdateMatchExpression) = self.request.SESSION[(config.SESSION_KEY, sfa.UID())]
-            if obj_id is None:
-                raise ExpressionChanged
-            if oldUpdateMatchExpression != 'CREATED' and oldUpdateMatchExpression != updateMatchExpression:
-                raise ExpressionChanged
-        except (AttributeError, KeyError, ExpressionChanged):
-            # find item using expression
-            query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
-        else:
-            if obj_id is not None:
-                query = "SELECT %s FROM %s WHERE Id='%s'" % (', '.join(fieldList), sObjectType, obj_id)
-            else:
-                self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (None, updateMatchExpression)
-                return {}
-
-        res = sfbc.query(query)
-        error_msg = ''
-        if not len(res['records']):
-            if sfa.getActionIfNoExistingObject() == 'abort':
-                error_msg = _(u'Could not find item to edit.')
-            else:
-                self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (None, updateMatchExpression)
-                return {}
-        if len(res['records']) > 1:
-            error_msg = _(u'Multiple items found; unable to determine which one to edit.')
-
-        # if we have an error condition, report it
-        if error_msg:
-            IStatusMessage(self.request).addStatusMessage(error_msg)
-            mtool = getToolByName(self.context, 'portal_membership')
-            if mtool.checkPermission('Modify portal content', self.form):
-                # user needs to be able to edit form
-                self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (None, updateMatchExpression)
-                return {}
-            else:
-                # user shouldn't see form
-                portal_url = getToolByName(self.context, 'portal_url')()
-                raise Redirect(portal_url)
-
-        data = {'Id':res['records'][0]['Id']}
-        for m in mappings:
-            if not m['sf_field']:
-                continue
-            value = res['records'][0][m['sf_field']]
-            if isinstance(value, date):
-                # make sure that the date gets interpreted as UTC
-                value = str(value) + ' +00:00'
-            data[m['field_path']] = value
-        
-        obj_id = None
-        if 'Id' in data:
-            obj_id = data['Id']
-        self.request.SESSION[(config.SESSION_KEY, sfa.UID())] = (obj_id, updateMatchExpression)
-
-        return data
+        return sfa.retrieveData()
 
     def getForm(self):
         if IPloneFormGenForm.providedBy(self.context):

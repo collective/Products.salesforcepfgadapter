@@ -9,6 +9,7 @@ __author__  = ''
 __docformat__ = 'plaintext'
 
 # Python imports
+from datetime import date
 import logging
 
 # Zope imports
@@ -67,6 +68,7 @@ from Products.salesforcepfgadapter import HAS_PLONE25, HAS_PLONE30
 from Products.salesforcepfgadapter import validators
 from Products.salesforcepfgadapter import interfaces
 from Products.salesforcepfgadapter import config
+from Products.salesforcepfgadapter.prepopulator import ExpressionChanged, sanitize_soql
 
 if HAS_PLONE25:
     import zope.i18n
@@ -313,47 +315,132 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         value = self._evaluateExpression(mapping['value'])
                         sObject[mapping['sf_field']] = value
 
-                if len(sObject.keys()) > 1:
-                    salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
-                    
-                    if adapter.getCreationMode() == 'update':
-                        # get the user's SF UID from the session
-                        try:
-                            uid = adapter._userIdToUpdate()
-                        except KeyError:
-                            error_msg = _(u'Session expired. Unable to process form. Please try again.')
-                            IStatusMessage(REQUEST).addStatusMessage(error_msg)
-                            raise Redirect(aq_parent(self).absolute_url())
+                salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
+                
+                if adapter.getCreationMode() == 'update':
+                    # get the user's SF UID from the session
+                    try:
+                        uid = adapter._userIdToUpdate(sObject)
+                    except KeyError:
+                        error_msg = _(u'Session expired. Unable to process form. Please try again.')
+                        IStatusMessage(REQUEST).addStatusMessage(error_msg)
+                        raise Redirect(aq_parent(self).absolute_url())
 
-                        if uid:
-                            sObject['Id'] = uid
+                    if uid:
+                        sObject['Id'] = uid
+                        if len(sObject.keys()) > 2:
+                            # only update if we are setting something beyond type and Id
                             result = salesforce.update(sObject)[0]
                         else:
-                            if adapter.getActionIfNoExistingObject() == 'create':
-                                result = salesforce.create(sObject)[0]
-                            else:
-                                error_msg = _(u'Could not find item to edit.')
-                                IStatusMessage(REQUEST).addStatusMessage(error_msg)
-                                raise Redirect(aq_parent(self).absolute_url())
-                    else: # create
-                        result = salesforce.create(sObject)[0]
-
-                    if result['success']:
-                        logger.debug("Successfully %sd %s %s in Salesforce" % \
-                                     (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
-                        uids[adapter.getId()] = result['id']
-
-                        REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())] = (result['id'], 'CREATED')
-
+                            result = {'success': True, 'id': uid}
                     else:
-                        errorStr = 'Failed to %s %s in Salesforce: %s' % \
-                            (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])
-                        raise Exception(errorStr)
+                        if len(sObject.keys()) <= 1:
+                            logger.warn('No valid field mappings found. Not calling Salesforce.')
+                            continue
+                        
+                        if adapter.getActionIfNoExistingObject() == 'create':
+                            result = salesforce.create(sObject)[0]
+                        else:
+                            error_msg = _(u'Could not find item to edit.')
+                            IStatusMessage(REQUEST).addStatusMessage(error_msg)
+                            raise Redirect(aq_parent(self).absolute_url())
+                else: # create
+                    if len(sObject.keys()) <= 1:
+                        logger.warn('No valid field mappings found. Not calling Salesforce.')
+                        continue
+                
+                    result = salesforce.create(sObject)[0]
+
+                if result['success']:
+                    logger.debug("Successfully %sd %s %s in Salesforce" % \
+                                 (adapter.getCreationMode(), adapter.SFObjectType, result['id']))
+                    uids[adapter.getId()] = result['id']
+
+                    REQUEST.SESSION[(config.SESSION_KEY, adapter.UID())] = (result['id'], 'CREATED')
+
                 else:
-                    logger.warn('No valid field mappings found. Not calling Salesforce.')
+                    errorStr = 'Failed to %s %s in Salesforce: %s' % \
+                        (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])
+                    raise Exception(errorStr)
     
-    def _userIdToUpdate(self):
+    def _userIdToUpdate(self, sObject):
+        if len(sObject.keys()) == 1:
+            # only 'type' --> means no mapped fields, so do lookup now
+            data = self.retrieveData()
+            return data['Id']
         return self.REQUEST.SESSION[(config.SESSION_KEY, self.UID())][0]
+    
+    security.declarePrivate('retrieveData')
+    def retrieveData(self):
+        request = self.REQUEST
+        sfbc = getToolByName(self, 'portal_salesforcebaseconnector')
+        sObjectType = self.getSFObjectType()
+        econtext = getExprContext(self)
+        econtext.setGlobal('sanitize_soql', sanitize_soql)
+        updateMatchExpression = self.getUpdateMatchExpression(expression_context = econtext)
+        mappings = self.getFieldMap()
+
+        # determine which fields to retrieve
+        fieldList = [m['sf_field'] for m in mappings if m['sf_field']]
+        # we always want the ID
+        fieldList.append('Id')
+
+        try:
+            (obj_id, oldUpdateMatchExpression) = request.SESSION[(config.SESSION_KEY, self.UID())]
+            if obj_id is None:
+                raise ExpressionChanged
+            if oldUpdateMatchExpression != 'CREATED' and oldUpdateMatchExpression != updateMatchExpression:
+                raise ExpressionChanged
+        except (AttributeError, KeyError, ExpressionChanged):
+            # find item using expression
+            query = 'SELECT %s FROM %s WHERE %s' % (', '.join(fieldList), sObjectType, updateMatchExpression)
+        else:
+            if obj_id is not None:
+                query = "SELECT %s FROM %s WHERE Id='%s'" % (', '.join(fieldList), sObjectType, obj_id)
+            else:
+                request.SESSION[(config.SESSION_KEY, self.UID())] = (None, updateMatchExpression)
+                return {}
+
+        res = sfbc.query(query)
+        error_msg = ''
+        if not len(res['records']):
+            if self.getActionIfNoExistingObject() == 'abort':
+                error_msg = _(u'Could not find item to edit.')
+            else:
+                request.SESSION[(config.SESSION_KEY, self.UID())] = (None, updateMatchExpression)
+                return {}
+        if len(res['records']) > 1:
+            error_msg = _(u'Multiple items found; unable to determine which one to edit.')
+
+        # if we have an error condition, report it
+        if error_msg:
+            IStatusMessage(request).addStatusMessage(error_msg)
+            mtool = getToolByName(self, 'portal_membership')
+            if mtool.checkPermission('Modify portal content', self.aq_parent):
+                # user needs to be able to edit form
+                request.SESSION[(config.SESSION_KEY, self.UID())] = (None, updateMatchExpression)
+                return {}
+            else:
+                # user shouldn't see form
+                portal_url = getToolByName(self, 'portal_url')()
+                raise Redirect(portal_url)
+
+        data = {'Id':res['records'][0]['Id']}
+        for m in mappings:
+            if not m['sf_field']:
+                continue
+            value = res['records'][0][m['sf_field']]
+            if isinstance(value, date):
+                # make sure that the date gets interpreted as UTC
+                value = str(value) + ' +00:00'
+            data[m['field_path']] = value
+        
+        obj_id = None
+        if 'Id' in data:
+            obj_id = data['Id']
+        request.SESSION[(config.SESSION_KEY, self.UID())] = (obj_id, updateMatchExpression)
+
+        return data
     
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form

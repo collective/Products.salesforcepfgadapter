@@ -3,6 +3,11 @@ Changelog
 
 1.6.5 (unreleased)
 
+- Obtain an Id from adapters in update mode even if they don't have any fields
+  mapped, so that that Id can be used from a chained adapter. This makes it
+  possible to create objects with a lookup field to an existing object that
+  is found by an arbitrary SOQL expression, rather than simply by its Id.
+  [davisagli]
 
 1.6.4 (2010-08-27)
 
