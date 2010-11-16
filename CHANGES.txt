@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.6.5 (unreleased)
+1.7.0 (2010-11-16)
 
 - Obtain an Id from adapters in update mode even if they don't have any fields
   mapped, so that that Id can be used from a chained adapter. This makes it
