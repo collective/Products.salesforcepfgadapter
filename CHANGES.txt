@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.8.1 (unreleased)
+
+
 1.8.0 (2010-12-01)
 
 - Add a new option for what to do in update mode if no object is found:
