@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.8.0 (2010-12-01)
+
+- Add a new option for what to do in update mode if no object is found:
+  "Silently skip this and any subsequent Salesforce adapters"
+  [davisagli]
+
 1.7.0 (2010-11-16)
 
 - Obtain an Id from adapters in update mode even if they don't have any fields

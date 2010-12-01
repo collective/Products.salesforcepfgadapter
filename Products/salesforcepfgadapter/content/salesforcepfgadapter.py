@@ -221,6 +221,7 @@ schema = FormAdapterSchema.copy() + Schema((
         vocabulary = DisplayList((
             ('create', _(u'Create a new object instead.')),
             ('abort', _(u'Fail with an error message.')),
+            ('quiet_abort', _(u'Silently skip this and any subsequent Salesforce adapters.')),
             )),
         default = 'abort',
         ),
@@ -334,11 +335,15 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         else:
                             result = {'success': True, 'id': uid}
                     else:
+                        actionIfNoExistingObject = adapter.getActionIfNoExistingObject()
+                        if actionIfNoExistingObject == 'quiet_abort':
+                            return
+                        
                         if len(sObject.keys()) <= 1:
                             logger.warn('No valid field mappings found. Not calling Salesforce.')
                             continue
                         
-                        if adapter.getActionIfNoExistingObject() == 'create':
+                        if actionIfNoExistingObject == 'create':
                             result = salesforce.create(sObject)[0]
                         else:
                             error_msg = _(u'Could not find item to edit.')
@@ -367,6 +372,8 @@ class SalesforcePFGAdapter(FormActionAdapter):
         if len(sObject.keys()) == 1:
             # only 'type' --> means no mapped fields, so do lookup now
             data = self.retrieveData()
+            if not data:
+                return
             return data['Id']
         return self.REQUEST.SESSION[(config.SESSION_KEY, self.UID())][0]
     

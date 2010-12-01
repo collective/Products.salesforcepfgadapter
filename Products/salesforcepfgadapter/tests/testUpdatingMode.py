@@ -222,6 +222,23 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
             self._todelete.append(item['Id'])
         self.assertEqual(1, res['size'])
         self.assertEqual('PloneTestCase', res['records'][0]['LastName'])
+    
+    def testUpdateModeQuietAbortIfNoMatch(self):
+        self._assertNoExistingTestContact()
+
+        self.ff1.contact_adapter.setActionIfNoExistingObject('quiet_abort')
+        
+        # open a test browser on the initial form; submit it.  Should work fine
+        # without writing anything to salesforce.
+        browser = Browser()
+        browser.open('http://nohost/plone/ff1')
+        self.assertEqual(browser.url, 'http://nohost/plone/ff1')
+        self.assertEqual(browser.getControl(name='replyto').value, '')
+        browser.getControl(name='replyto').value = 'plonetestcase@plone.org'
+        self.assertEqual(browser.getControl(name='comments').value, '')
+        browser.getControl(name='comments').value = 'PloneTestCase'
+        browser.getControl('Submit').click()
+        self.failUnless('Thank You' in browser.contents)
 
     def testUpdateModeAbortIfNoMatch(self):
         self._assertNoExistingTestContact()
