@@ -7,8 +7,6 @@ from Products.PloneTestCase.layer import onsetup
 
 from Products.salesforcebaseconnector.tests.layer import SalesforcePloneLayer
 
-import Products.salesforcepfgadapter
-
 # These must install cleanly, ZopeTestCase will take care of the others
 ztc.installProduct('PloneFormGen')
 ztc.installProduct('DataGridField')
@@ -24,8 +22,12 @@ PRODUCTS = ['salesforcepfgadapter']
 def load_zcml():
     # load our zcml
     fiveconfigure.debug_mode = True
+    import Products.salesforcepfgadapter
     zcml.load_config('configure.zcml', Products.salesforcepfgadapter)
     fiveconfigure.debug_mode = False
+    
+    import Products.salesforcepfgadapter.tests
+    Products.salesforcepfgadapter.tests.TESTING = True
 
 load_zcml()
 ptc.setupPloneSite(products=PRODUCTS)

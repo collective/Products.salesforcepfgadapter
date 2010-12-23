@@ -277,6 +277,7 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         # create a contact and load it into the form...
         self._createTestContact()
         browser = Browser()
+        browser.handleErrors = False
         browser.open('http://nohost/plone/ff1')
         self.assertEqual(browser.getControl(name='comments').value, 'PloneTestCase')
         
@@ -288,8 +289,8 @@ class TestUpdateModes(base.SalesforcePFGAdapterFunctionalTestCase):
         # since the object no longer exists
         try:
             browser.getControl('Submit').click()
-        except:
-            self.assertEqual(self.portal.error_log.getLogEntries()[0]['value'],
+        except Exception, e:
+            self.assertEqual(e.message,
                 'Failed to update Contact in Salesforce: entity is deleted')
 
     def testNoUpdateIfInitialSessionWasDestroyed(self):

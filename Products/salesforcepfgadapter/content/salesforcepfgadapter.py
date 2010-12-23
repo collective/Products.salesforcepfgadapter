@@ -377,6 +377,10 @@ class SalesforcePFGAdapter(FormActionAdapter):
         try:
             self._onSuccess(fields, REQUEST)
         except:
+            from Products.salesforcepfgadapter.tests import TESTING
+            if TESTING:
+                raise
+            
             # swallow the exception, but log it
             logger.exception('Unable to save form data to Salesforce. (%s)' % '/'.join(self.getPhysicalPath()))
             
