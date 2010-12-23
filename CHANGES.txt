@@ -1,8 +1,16 @@
 Changelog
 =========
 
-1.8.1 (unreleased)
+1.9.0 (unreleased)
 
+- Add fallback logic for when the adapter cannot write to Salesforce. In this
+  case it will first try saving to an enabled savedata adapter, if present.
+  Next it will try saving to a disabled savedata adapter, if present. Finally
+  it will try sending an e-mail to the site's admin e-mail address. An e-mail
+  is sent in all 3 cases to alert the administrator that writing to Salesforce
+  failed. If one of the fallbacks succeeds, the user filling out the form will
+  see the normal thank you page instead of an error.
+  [davisagli]
 
 1.8.0 (2010-12-01)
 

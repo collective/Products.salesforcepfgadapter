@@ -54,11 +54,13 @@ from Products.DataGridField.DataGridField import FixedRow
 from Products.TALESField import TALESString
 
 # Interfaces
-from Products.PloneFormGen.interfaces import IPloneFormGenField
+from Products.PloneFormGen.interfaces import IPloneFormGenField, IPloneFormGenActionAdapter
 
 # PloneFormGen imports
 from Products.PloneFormGen.content.actionAdapter import \
     FormActionAdapter, FormAdapterSchema
+from Products.PloneFormGen.content.formMailerAdapter import FormMailerAdapter
+from Products.PloneFormGen.content.saveDataAdapter import FormSaveDataAdapter
 from Products.PloneFormGen.content.fields import FGFileField
 
 # Local imports
@@ -276,8 +278,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
             return Expression(expr)(econtext)
         return expr
     
-    security.declareProtected(View, 'onSuccess')
-    def onSuccess(self, fields, REQUEST=None):
+    def _onSuccess(self, fields, REQUEST=None):
         """ The essential method of a PloneFormGen Adapter:
         - collect the submitted form data
         - examine our field map to determine which Saleforce fields
@@ -367,6 +368,62 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     errorStr = 'Failed to %s %s in Salesforce: %s' % \
                         (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])
                     raise Exception(errorStr)
+    
+    security.declareProtected(View, 'onSuccess')
+    def onSuccess(self, fields, REQUEST=None):
+        # wrap _onSuccess so we can do fallback behavior when calls to Salesforce fail
+        
+        message = None
+        try:
+            self._onSuccess(fields, REQUEST)
+        except:
+            # swallow the exception, but log it
+            logger.exception('Unable to save form data to Salesforce. (%s)' % '/'.join(self.getPhysicalPath()))
+            
+            formFolder = aq_parent(self)
+            enabled_adapters = formFolder.getActionAdapter()
+            adapters = [o for o in formFolder.objectValues() if IPloneFormGenActionAdapter.providedBy(o)]
+            active_savedata = [o for o in adapters if isinstance(o, FormSaveDataAdapter)
+                                                   and o in enabled_adapters]
+            inactive_savedata = [o for o in adapters if isinstance(o, FormSaveDataAdapter)
+                                                     and o not in enabled_adapters]
+            
+            # 1. If there's an enabled save data adapter, just suppress the exception
+            #    so the data will still be saved.
+            if active_savedata:
+                message = """
+Someone submitted this form, but the data couldn't be saved to Salesforce
+due to an exception: %s The data was recorded in this Saved-data adapter instead: %s
+""" % (formFolder.absolute_url(), active_savedata[0].absolute_url())
+            
+            # 2. If there's a *disabled* save data adapter, call it.
+            #    (This can be used to record data locally *only* when recording to Salesforce fails.)
+            elif inactive_savedata:
+                message = """
+Someone submitted this form, but the data couldn't be saved to Salesforce
+due to an exception: %s The data was recorded in this Saved-data adapter instead: %s
+""" % (formFolder.absolute_url(), inactive_savedata[0].absolute_url())
+                inactive_savedata[0].onSuccess(fields, REQUEST)
+            
+            # 3. If there's no savedata adapter, send the data in an e-mail.
+            else:
+                message = """
+Someone submitted this form, but the data couldn't be saved to Salesforce
+due to an exception: %s
+""" % formFolder.absolute_url()
+
+            mailer = FormMailerAdapter('dummy').__of__(formFolder)
+            mailer.msg_subject = 'Form submission to Salesforce failed'
+            mailer.subject_field = None
+            # we rely on the PFG mailer's logic to choose a good fallback recipient
+            mailer.recipient_name = ''
+            mailer.recipient_email = ''
+            mailer.cc_recipients = []
+            mailer.bcc_recipients = []
+            mailer.additional_headers = []
+            mailer.body_type = 'html'
+            mailer.setBody_pre(message, mimetype='text/html')
+            mailer.send_form(fields, REQUEST)
     
     def _userIdToUpdate(self, sObject):
         if len(sObject.keys()) == 1:
