@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.9.0 (unreleased)
+1.9.0b1 (2010-12-23)
 
 - Add fallback logic for when the adapter cannot write to Salesforce. In this
   case it will first try saving to an enabled savedata adapter, if present.

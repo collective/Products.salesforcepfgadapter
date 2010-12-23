@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.8.1dev'
+version = '1.9.0b1'
 
 setup(name='Products.salesforcepfgadapter',
       version=version,
