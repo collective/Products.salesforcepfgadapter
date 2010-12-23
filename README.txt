@@ -175,6 +175,25 @@ setting up at least one form field mapping for each adapter to work properly.
 In addition, the behavior if a single field is mapped by multiple adapters is
 not yet defined.
 
+When Things Break
+-----------------
+
+Sometimes temporary errors may occur when trying to write to Salesforce (for
+example, if Salesforce is undergoing maintenance).  If this occurs when trying
+to process an adapter whose "creation mode" is set to "create," a fallback
+mechanism will try to record the information in an alternate way.
+
+If any savedata adapter is present (whether or not it is enabled),
+the data will be saved using it.  In addition, regardless of whether a savedata
+adapter is present, an e-mail will be sent to the e-mail address configured in
+the Plone site's e-mail settings, to report that saving to Salesforce failed.
+A site administrator can then take action based on this e-mail as necessary.
+The end user is directed to the normal form thank you page, so that they are
+not inconvenienced by the error writing to Salesforce.
+
+There is no fallback mechanism for adapters in update mode, since this mode
+requires reading from Salesforce as well.
+
 
 Dependencies
 ============
