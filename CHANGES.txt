@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.9.0 (unreleased)
+
+- Include the exception message in the fallback e-mail.
+  [davisagli]
+
 1.9.0b1 (2010-12-23)
 
 - Add fallback logic for when the adapter cannot write to Salesforce. In this

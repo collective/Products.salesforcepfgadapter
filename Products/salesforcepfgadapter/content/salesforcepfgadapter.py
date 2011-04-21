@@ -11,6 +11,8 @@ __docformat__ = 'plaintext'
 # Python imports
 from datetime import date
 import logging
+import traceback
+import sys
 
 # Zope imports
 from zope.interface import implements
@@ -382,6 +384,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 raise
             
             # swallow the exception, but log it
+            t, v = sys.exc_info()[:2]
             logger.exception('Unable to save form data to Salesforce. (%s)' % '/'.join(self.getPhysicalPath()))
             
             formFolder = aq_parent(self)
@@ -416,6 +419,9 @@ Someone submitted this form, but the data couldn't be saved to Salesforce
 due to an exception: %s
 """ % formFolder.absolute_url()
 
+            err_msg = 'Technical details on the exception: '
+            err_msg += ''.join(traceback.format_exception_only(t, v))
+
             mailer = FormMailerAdapter('dummy').__of__(formFolder)
             mailer.msg_subject = 'Form submission to Salesforce failed'
             mailer.subject_field = None
@@ -427,6 +433,7 @@ due to an exception: %s
             mailer.additional_headers = []
             mailer.body_type = 'html'
             mailer.setBody_pre(message, mimetype='text/html')
+            mailer.setBody_post(err_msg, mimetype='text/html')
             mailer.send_form(fields, REQUEST)
     
     def _userIdToUpdate(self, sObject):
