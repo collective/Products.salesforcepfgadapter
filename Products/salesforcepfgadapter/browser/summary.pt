@@ -12,6 +12,7 @@
     #content th .enabled { color: green;}
     #content th .disabled { color: red;}
     td.disabled { color: #999;}
+    #content td ul { margin-left: 1em;}
   </style>
 </metal:css>
 
@@ -19,15 +20,15 @@
     <tal:main-macro metal:define-macro="main">
     <tal:summary tal:condition="view/has_sf_adapters">
       <h2>Field Mapping Summary</h2>
-      <p>An overview of how form field mappings, presets, and adapter chains are configured in the context of this form.</p>
+      <p>An overview of how each field on this form is handled (or ignored) by each Salesforce adapter in this form.</p>
       <table class="listing">
         <tr>
-          <th>Title</th>
-          <th>Id</th>
+          <th>Form Field</th>
           <tal:adapters tal:repeat="adapter view/adapters">
             <th>
               <span tal:replace="adapter/title">[Adapter title]</span><br />
-              <span class="discreet" tal:content="string:(${adapter/sf_type})">[sf field]</span><br />
+              <span class="discreet" 
+                    tal:content="string:(writes to ${adapter/sf_type} in Salesforce)">[sf field]</span><br />
               <span tal:attributes="class string:discreet ${adapter/status}"
                     tal:content="adapter/status">[status]</span>
             </th>
@@ -35,38 +36,69 @@
         </tr>
         <tal:fields tal:repeat="field view/fields">
         <tr>
-          <td tal:content="field/title">[field title]</td>
-          <td tal:content="field/id">[field id]</td>
+          <td>
+            <span tal:content="field/title">[Title]</span>
+            <span class="discreet">(<code tal:content="field/id">[field id]</code>)</span>
+          </td>
           <tal:adapters tal:repeat="adapter view/adapters">
-            <td tal:attributes="class adapter/status"
-                tal:content="python:view.map_for_field(field['id'], adapter['id'])">[field mapped]</td>
+            <td tal:attributes="class adapter/status">
+              <code tal:content="python:view.map_for_field(field['id'], adapter['id'])">[field mapped]</code>
+            </td>
           </tal:adapters>
         </tr>
         </tal:fields>
+      </table>
+      
+      <h2>Preset Values, Chaining and Execution Conditions</h2>
+      <p>This table shows any preset value expressions configured on each Salesforce adapter, as well as any 
+         returned Id's used by other adapters.</p>
+      <table class="listing">  
         <tr>
-        <th colspan="2">Preset Values</th>
+          <th>&nbsp;</th>
+          <th>Preset Values
+            <br /><span class="discreet">Expressions that evaluate to values always mapped to a field in Salesforce</span>
+          </th>
+          <th>Dependencies
+            <br /><span class="discreet">Indicates if the adapter has been configured to use ID's returned by other adapters</span>
+          </th>
+          <th>Execution Condition 
+            <br /><span class="discreet">The adapter will only fire if this condition evaluates as True when the form is submitted</span>
+          </th>
+        </tr>
         <tal:adapters tal:repeat="adapter view/adapters">
-          <td tal:condition="adapter/presets"
-              tal:attributes="class adapter/status">
-            <ul tal:repeat="preset adapter/presets">
-              <li tal:content="python:'%s = %s' % (preset[0], preset[1])" />
-            </ul>
-          </td>
-          <td tal:condition="not: adapter/presets"></td>
+          <tr>
+            <th>
+              <span tal:replace="adapter/title">[Adapter title]</span><br />
+              <span class="discreet" 
+                    tal:content="string:(writes to ${adapter/sf_type} in Salesforce)">[sf field]</span><br />
+              <span tal:attributes="class string:discreet ${adapter/status}"
+                    tal:content="adapter/status">[status]</span>
+            </th>
+            <td tal:condition="adapter/presets"
+                tal:attributes="class adapter/status">
+                <ul tal:repeat="preset adapter/presets">
+                  <li><code tal:content="python:preset[0]" /> will be set to the value of expression 
+                      <code tal:content="python:preset[1]" />
+                  </li>
+                </ul>
+            </td>
+            <td tal:condition="not: adapter/presets"></td>
+            <td tal:condition="adapter/parents"
+                tal:attributes="class adapter/status">
+              <ul tal:repeat="parent adapter/parents">
+                <li>The Salesforce field <code tal:content="python:parent[0]" /> will be set to the
+                    ID returned by the adapter <code tal:content="python:parent[1]" />.
+                  </li>
+              </ul>
+            </td>
+            <td tal:condition="not: adapter/parents"></td>
+            <td tal:condition="adapter/condition"
+                tal:attributes="class adapter/status">
+              <code tal:content="adapter/condition">[condition]</code>
+            </td>
+            <td tal:condition="not: adapter/parents"></td>            
+          </tr>
         </tal:adapters>
-      </tr>
-      <tr>
-        <th colspan="2">Dependency Maps</th>
-        <tal:adapters tal:repeat="adapter view/adapters">
-          <td tal:condition="adapter/parents"
-              tal:attributes="class adapter/status">
-            <ul tal:repeat="parent adapter/parents">
-              <li tal:content="python:'%s set to Id returned from %s' % (parent[0], parent[1])" />
-            </ul>
-          </td>
-          <td tal:condition="not: adapter/parents"></td>
-        </tal:adapters>
-      </tr> 
       </table>
     </tal:summary>
     <b tal:condition="not:view/has_sf_adapters">

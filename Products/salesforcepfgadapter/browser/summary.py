@@ -42,6 +42,7 @@ class AdapterOverview(BrowserView):
                     'sf_type':a.getSFObjectType(),
                     'presets':presets,
                     'parents':parents,
+                    'condition':a.getRawExecCondition(),
                     'status':self._adapter_status(a)}
             info.append(data)
         return info
