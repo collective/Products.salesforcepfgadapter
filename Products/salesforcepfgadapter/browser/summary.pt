@@ -92,11 +92,9 @@
               </ul>
             </td>
             <td tal:condition="not: adapter/parents"></td>
-            <td tal:condition="adapter/condition"
-                tal:attributes="class adapter/status">
+            <td tal:attributes="class adapter/status">
               <code tal:content="adapter/condition">[condition]</code>
-            </td>
-            <td tal:condition="not: adapter/parents"></td>            
+            </td>          
           </tr>
         </tal:adapters>
       </table>
