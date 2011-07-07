@@ -6,7 +6,7 @@
   <browser:page
       for="Products.PloneFormGen.interfaces.IPloneFormGenForm"
       name="sfadapter-summary"
-      class=".summary.AdapterOverview"
+      class=".summary.AdapterSummary"
       template="summary.pt"
       permission="zope.Public"
       allowed_attributes="map_for_field has_sf_adapters"

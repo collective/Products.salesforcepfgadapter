@@ -1,9 +1,11 @@
 from Products.Five import BrowserView
+from Products.CMFCore.utils import getToolByName
 from Products.PloneFormGen.interfaces import IPloneFormGenField
+
 from Products.salesforcepfgadapter.config import SF_ADAPTER_TYPES
 
 
-class AdapterOverview(BrowserView):
+class AdapterSummary(BrowserView):
     
     def __call__(self):
         self.adapters = self._sf_adapters()
@@ -12,9 +14,14 @@ class AdapterOverview(BrowserView):
         return self.index()
     
     def has_sf_adapters(self):
+        """ Does this form have any Salesforce adapters?
+        """
         return bool(self._sf_adapters())
     
     def map_for_field(self, field_id, adapter_id):
+        """ For a given PFG field Id and a Salesforce adapter Id, return the 
+            Salesforce field the form field will be mapped to, or None.
+        """
         field = self._field_by_id(field_id)
         adapter = self._adapter_by_id(adapter_id)
         if field is None or adapter is None:
@@ -26,6 +33,9 @@ class AdapterOverview(BrowserView):
         return None
     
     def _sf_adapters(self):
+        """ Return a tuple of dicts describing all the Salesforce adapters
+            associated with this form.
+        """
         info = []
         adapters = self.context.objectValues(SF_ADAPTER_TYPES)
         for a in adapters:
@@ -45,17 +55,23 @@ class AdapterOverview(BrowserView):
                     'condition':a.getRawExecCondition(),
                     'status':self._adapter_status(a)}
             info.append(data)
-        return info
+        return tuple(info)
     
     def _form_fields(self):
+        """ Return the Id and Title for every field in this form, as a tuple 
+            of dicts.
+        """
         info = []
-        contents = self.context.objectValues()
-        fields = [f for f in contents if IPloneFormGenField.providedBy(f)]
-        for field in fields:
-            data = {'id':field.getId(),
-                    'title':field.Title(),}
+        cat = getToolByName(self.context, 'portal_catalog')
+        form_path = '/'.join(self.context.getPhysicalPath())
+        brains = cat(object_provides = IPloneFormGenField.__identifier__,
+                     path=form_path)
+        
+        for brain in brains:
+            data = {'id':brain.getId,
+                    'title':brain.Title,}
             info.append(data)
-        return info
+        return tuple(info)
     
     def _adapter_status(self, adapter):
         if adapter.getId() in self.context.getRawActionAdapter():
@@ -63,10 +79,23 @@ class AdapterOverview(BrowserView):
         return u'disabled'
     
     def _adapter_by_id(self, id):
-        # TODO: Currently does not support fieldsets
+        """ This assumes that adapters can only live in the root of a 
+            FormFolder.
+        """
         return self.context.get(id, None)
     
     def _field_by_id(self, id):
-        # TODO: Currently does not support fieldsets
-        return self.context.get(id, None)
+        """ Return a Form Field for a given id/shortname.
+        """
+        cat = getToolByName(self.context, 'portal_catalog')
+        form_path = '/'.join(self.context.getPhysicalPath())
+        brains = cat(object_provides = IPloneFormGenField.__identifier__,
+                     path=form_path,
+                     id=id)
+        if len(brains) > 1:
+            raise RuntimeError("Found multiple fields with id %s in this form!"
+                                    % id)
+        if brains:
+            return brains[0].getObject()
+        return None
     
