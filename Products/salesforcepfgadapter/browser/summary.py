@@ -28,7 +28,13 @@ class AdapterSummary(BrowserView):
             return None
         fieldmap = adapter.getFieldMap()
         for m in fieldmap:
-            if m['field_path'] == field_id and m['sf_field']:
+            # Check for fields inside old-style fieldsets, where the fieldset
+            # name is added to the field_path:
+            if ',' in m['field_path']:
+                id_from_map = m['field_path'].split(',')[-1]
+            else:
+                id_from_map = m['field_path']
+            if id_from_map == field_id and m['sf_field']:
                 return m['sf_field']
         return None
     

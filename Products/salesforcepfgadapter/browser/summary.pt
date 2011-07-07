@@ -41,8 +41,10 @@
             <span class="discreet">(<code tal:content="field/id">[field id]</code>)</span>
           </td>
           <tal:adapters tal:repeat="adapter view/adapters">
-            <td tal:attributes="class adapter/status">
-              <code tal:content="python:view.map_for_field(field['id'], adapter['id'])">[field mapped]</code>
+            <td tal:attributes="class adapter/status"
+                tal:define="sf_field python:view.map_for_field(field['id'], adapter['id'])">
+              <code tal:condition="sf_field"
+                    tal:content="sf_field">[field mapped]</code>
             </td>
           </tal:adapters>
         </tr>
@@ -93,7 +95,8 @@
             </td>
             <td tal:condition="not: adapter/parents"></td>
             <td tal:attributes="class adapter/status">
-              <code tal:content="adapter/condition">[condition]</code>
+              <code tal:condition="adapter/condition"
+                    tal:content="adapter/condition">[condition]</code>
             </td>          
           </tr>
         </tal:adapters>
