@@ -41,7 +41,8 @@ class AdapterOverview(BrowserView):
                     'title':a.Title(),
                     'sf_type':a.getSFObjectType(),
                     'presets':presets,
-                    'parents':parents,}
+                    'parents':parents,
+                    'status':self._adapter_status(a)}
             info.append(data)
         return info
     
@@ -54,6 +55,11 @@ class AdapterOverview(BrowserView):
                     'title':field.Title(),}
             info.append(data)
         return info
+    
+    def _adapter_status(self, adapter):
+        if adapter.getId() in self.context.getRawActionAdapter():
+            return u'enabled'
+        return u'disabled'
     
     def _adapter_by_id(self, id):
         # TODO: Currently does not support fieldsets

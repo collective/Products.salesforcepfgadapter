@@ -7,6 +7,14 @@
       i18n:domain="Products.salesforcepfgadapter">
 <body>
 
+<metal:css fill-slot="style_slot"> 
+  <style type="text/css" media="all">
+    #content th .enabled { color: green;}
+    #content th .disabled { color: red;}
+    td.disabled { color: #999;}
+  </style>
+</metal:css>
+
 <metal:main fill-slot="main">
     <tal:main-macro metal:define-macro="main">
     <tal:summary tal:condition="view/is_active">
@@ -18,8 +26,10 @@
           <th>Id</th>
           <tal:adapters tal:repeat="adapter view/adapters">
             <th>
-              <span tal:replace="adapter/title">[Adapter title]</span><br/>
-              <span class="discreet" tal:content="string:(${adapter/sf_type})">[sf field]</span>
+              <span tal:replace="adapter/title">[Adapter title]</span><br />
+              <span class="discreet" tal:content="string:(${adapter/sf_type})">[sf field]</span><br />
+              <span tal:attributes="class string:discreet ${adapter/status}"
+                    tal:content="adapter/status">[status]</span>
             </th>
           </tal:adapters>
         </tr>
@@ -28,14 +38,16 @@
           <td tal:content="field/title">[field title]</td>
           <td tal:content="field/id">[field id]</td>
           <tal:adapters tal:repeat="adapter view/adapters">
-            <td tal:content="python:view.map_for_field(field['id'], adapter['id'])">[field mapped]</td>
+            <td tal:attributes="class adapter/status"
+                tal:content="python:view.map_for_field(field['id'], adapter['id'])">[field mapped]</td>
           </tal:adapters>
         </tr>
         </tal:fields>
         <tr>
         <th colspan="2">Preset Values</th>
         <tal:adapters tal:repeat="adapter view/adapters">
-          <td tal:condition="adapter/presets">
+          <td tal:condition="adapter/presets"
+              tal:attributes="class adapter/status">
             <ul tal:repeat="preset adapter/presets">
               <li tal:content="python:'%s = %s' % (preset[0], preset[1])" />
             </ul>
@@ -46,7 +58,8 @@
       <tr>
         <th colspan="2">Dependency Maps</th>
         <tal:adapters tal:repeat="adapter view/adapters">
-          <td tal:condition="adapter/parents">
+          <td tal:condition="adapter/parents"
+              tal:attributes="class adapter/status">
             <ul tal:repeat="parent adapter/parents">
               <li tal:content="python:'%s set to Id returned from %s' % (parent[0], parent[1])" />
             </ul>

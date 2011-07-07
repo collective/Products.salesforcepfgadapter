@@ -3,7 +3,6 @@
            xmlns:browser="http://namespaces.zope.org/browser"
            i18n_domain="salesforcepfgadapter">
 
-
   <browser:page
       for="Products.PloneFormGen.interfaces.IPloneFormGenForm"
       name="sfadapter-summary"
