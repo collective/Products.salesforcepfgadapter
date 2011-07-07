@@ -5,6 +5,10 @@ Changelog
 
 - Include the exception message in the fallback e-mail.
   [davisagli]
+  
+- Add a view and action to FormFolders which summarizes the configuration of
+  all Salesforce adapters.
+  [jessesnyder]
 
 1.9.0b1 (2010-12-23)
 
