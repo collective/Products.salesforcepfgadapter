@@ -1,0 +1,65 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="Products.salesforcepfgadapter">
+<body>
+
+<metal:main fill-slot="main">
+    <tal:main-macro metal:define-macro="main">
+    <tal:summary tal:condition="view/is_active">
+      <h2>Field Mapping Summary</h2>
+      <p>An overview of how form field mappings, presets, and adapter chains are configured in the context of this form.</p>
+      <table class="listing">
+        <tr>
+          <th>Title</th>
+          <th>Id</th>
+          <tal:adapters tal:repeat="adapter view/adapters">
+            <th>
+              <span tal:replace="adapter/title">[Adapter title]</span><br/>
+              <span class="discreet" tal:content="string:(${adapter/sf_type})">[sf field]</span>
+            </th>
+          </tal:adapters>
+        </tr>
+        <tal:fields tal:repeat="field view/fields">
+        <tr>
+          <td tal:content="field/title">[field title]</td>
+          <td tal:content="field/id">[field id]</td>
+          <tal:adapters tal:repeat="adapter view/adapters">
+            <td tal:content="python:view.map_for_field(field['id'], adapter['id'])">[field mapped]</td>
+          </tal:adapters>
+        </tr>
+        </tal:fields>
+        <tr>
+        <th colspan="2">Preset Values</th>
+        <tal:adapters tal:repeat="adapter view/adapters">
+          <td tal:condition="adapter/presets">
+            <ul tal:repeat="preset adapter/presets">
+              <li tal:content="python:'%s = %s' % (preset[0], preset[1])" />
+            </ul>
+          </td>
+          <td tal:condition="not: adapter/presets"></td>
+        </tal:adapters>
+      </tr>
+      <tr>
+        <th colspan="2">Dependency Maps</th>
+        <tal:adapters tal:repeat="adapter view/adapters">
+          <td tal:condition="adapter/parents">
+            <ul tal:repeat="parent adapter/parents">
+              <li tal:content="python:'%s set to Id returned from %s' % (parent[0], parent[1])" />
+            </ul>
+          </td>
+          <td tal:condition="not: adapter/parents"></td>
+        </tal:adapters>
+      </tr> 
+      </table>
+    </tal:summary>
+    <b tal:condition="not:view/is_active">
+      There are no Salesforce adapters configured for this form.</b>
+    
+    </tal:main-macro>
+</metal:main>
+</body>
+</html>

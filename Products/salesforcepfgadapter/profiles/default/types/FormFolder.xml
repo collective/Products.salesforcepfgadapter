@@ -5,4 +5,10 @@
  <property name="allowed_content_types" purge="False">
   <element value="SalesforcePFGAdapter"/>
  </property>
+ <action title="Salesforce" action_id="sfadapter-summary" category="object"
+    condition_expr="object/@@sfadapter-summary/is_active"
+    icon_expr="" link_target="" url_expr="string:${object_url}/sfadapter-summary"
+    visible="True">
+  <permission value="Modify portal content"/>
+ </action>
 </object>

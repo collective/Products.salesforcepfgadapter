@@ -1,0 +1,16 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+           xmlns:i18n="http://namespaces.zope.org/i18n"
+           xmlns:browser="http://namespaces.zope.org/browser"
+           i18n_domain="salesforcepfgadapter">
+
+
+  <browser:page
+      for="Products.PloneFormGen.interfaces.IPloneFormGenForm"
+      name="sfadapter-summary"
+      class=".summary.AdapterOverview"
+      template="summary.pt"
+      permission="zope.Public"
+      allowed_attributes="map_for_field is_active"
+      />
+
+</configure>

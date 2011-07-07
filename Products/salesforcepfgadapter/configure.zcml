@@ -12,6 +12,8 @@
       
   <include package="Products.PloneFormGen"/>
   <include package="Products.DataGridField"/>
+  
+  <include package=".browser"/>
 
   <gs:registerProfile
       name="default"
