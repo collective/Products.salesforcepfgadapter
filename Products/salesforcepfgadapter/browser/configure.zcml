@@ -9,7 +9,7 @@
       class=".summary.AdapterOverview"
       template="summary.pt"
       permission="zope.Public"
-      allowed_attributes="map_for_field is_active"
+      allowed_attributes="map_for_field has_sf_adapters"
       />
 
 </configure>

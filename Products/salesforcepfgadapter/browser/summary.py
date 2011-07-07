@@ -11,7 +11,7 @@ class AdapterOverview(BrowserView):
         
         return self.index()
     
-    def is_active(self):
+    def has_sf_adapters(self):
         return bool(self._sf_adapters())
     
     def map_for_field(self, field_id, adapter_id):

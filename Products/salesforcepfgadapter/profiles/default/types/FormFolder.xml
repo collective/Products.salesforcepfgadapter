@@ -6,7 +6,7 @@
   <element value="SalesforcePFGAdapter"/>
  </property>
  <action title="Salesforce" action_id="sfadapter-summary" category="object"
-    condition_expr="object/@@sfadapter-summary/is_active"
+    condition_expr="object/@@sfadapter-summary/has_sf_adapters"
     icon_expr="" link_target="" url_expr="string:${object_url}/sfadapter-summary"
     visible="True">
   <permission value="Modify portal content"/>

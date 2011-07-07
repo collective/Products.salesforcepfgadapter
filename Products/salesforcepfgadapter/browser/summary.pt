@@ -17,7 +17,7 @@
 
 <metal:main fill-slot="main">
     <tal:main-macro metal:define-macro="main">
-    <tal:summary tal:condition="view/is_active">
+    <tal:summary tal:condition="view/has_sf_adapters">
       <h2>Field Mapping Summary</h2>
       <p>An overview of how form field mappings, presets, and adapter chains are configured in the context of this form.</p>
       <table class="listing">
@@ -69,7 +69,7 @@
       </tr> 
       </table>
     </tal:summary>
-    <b tal:condition="not:view/is_active">
+    <b tal:condition="not:view/has_sf_adapters">
       There are no Salesforce adapters configured for this form.</b>
     
     </tal:main-macro>
