@@ -45,14 +45,8 @@ class AdapterSummary(BrowserView):
         info = []
         adapters = self.context.objectValues(SF_ADAPTER_TYPES)
         for a in adapters:
-            presets = []
-            for mapping in a.getPresetValueMap():
-                if mapping:
-                    presets.append((mapping['sf_field'],mapping['value']))
-            parents = []
-            for mapping in a.getDependencyMap():
-                if mapping['sf_field']:
-                    parents.append((mapping['sf_field'],mapping['adapter_name']))
+            presets = self._adapter_presets(a)
+            parents = self._adapter_parents(a)
             data = {'id':a.getId(),
                     'title':a.Title(),
                     'sf_type':a.getSFObjectType(),
@@ -89,6 +83,29 @@ class AdapterSummary(BrowserView):
             FormFolder.
         """
         return self.context.get(id, None)
+    
+    def _adapter_parents(self, adapter):
+        """ Return a tuple of tuples where the first value is the target
+            Salesforce field, and the second is the "parent" adapter that will
+            be providing the Id to use in setting the value.
+        """
+        parents = []
+        for mapping in adapter.getDependencyMap():
+            if mapping['sf_field']:
+                parents.append((mapping['sf_field'],mapping['adapter_name']))
+        return tuple(parents)
+    
+    def _adapter_presets(self, adapter):
+        """ Return a tuple of tuples where the first value is the target 
+            Salesforce field, and the second is the expression that will
+            generate the value.
+        """
+        presets = []
+        for mapping in adapter.getPresetValueMap():
+            if mapping:
+                presets.append((mapping['sf_field'],mapping['value']))
+                
+        return tuple(presets)
     
     def _field_by_id(self, id):
         """ Return a Form Field for a given id/shortname.
