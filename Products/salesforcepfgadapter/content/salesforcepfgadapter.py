@@ -554,7 +554,7 @@ due to an exception: %s
                 # The adapter is in update mode and one of the fields has a value
                 # of an empty string. If that field is nillable in Salesforce, we
                 # should set its value to None so that it gets cleared.
-                salesforceField = self._fieldsForSFObjectType[salesforceFieldName]
+                salesforceField = self._querySFFieldsForType()[salesforceFieldName]
                 if getattr(salesforceField, 'nillable', False):
                     formFieldValue = None
             elif formFieldValue is None:
@@ -640,7 +640,7 @@ due to an exception: %s
             eligible_mappings = []
             for mapping in accessor():
                 if mapping.has_key('sf_field') and not \
-                  self._fieldsForSFObjectType.has_key(mapping['sf_field']):
+                  self._querySFFieldsForType().has_key(mapping['sf_field']):
                     continue
                 
                 eligible_mappings.append(mapping)
@@ -706,7 +706,7 @@ due to an exception: %s
            for the currently selected Salesforce object
            type.
         """
-        sfFields = self._fieldsForSFObjectType
+        sfFields = self._querySFFieldsForType()
         
         fieldList = []
         for k, v in sfFields.items():
