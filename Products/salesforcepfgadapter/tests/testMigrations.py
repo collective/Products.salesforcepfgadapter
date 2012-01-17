@@ -80,10 +80,7 @@ class Test10rc1ProductMigration(base.SalesforcePFGAdapterTestCase):
         self.ff1.invokeFactory('SalesforcePFGAdapter', 'salesforce')
         
         # we brute force our attribute to the previous data structure
-        self.ff1.salesforce._fieldsForSFObjectType = []
-        
-        # a list has no call for items, thus the attribute error
-        self.assertRaises(AttributeError, self.ff1.salesforce.buildSFFieldOptionList)
+        self.ff1.salesforce.__dict__['_fieldsForSFObjectType'] = []
         
         # quickinstall
         self.qi.reinstallProducts(['salesforcepfgadapter',])

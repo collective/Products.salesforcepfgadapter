@@ -47,11 +47,11 @@ at things::
     
     >>> self.portal.portal_workflow.doActionFor(self.portal.testform, 'publish')
 
-Now our sophisticated anonymous user knows to navigate to the folder listing
-view and then to the Contact Adapter::
+Now our sophisticated anonymous user knows to navigate directly to the
+Contact Adapter::
 
     >>> anonbrowser = Browser()
-    >>> anonbrowser.open("http://nohost/plone/testform/folder_listing")
+    >>> anonbrowser.open("http://nohost/plone/testform/contact-adapter")
     >>> anonbrowser.getLink('Contact Adapter').click()
     >>> '<span class="" id="parent-fieldname-SFObjectType">\n            Contact\n        </span>' not in anonbrowser.contents
     True

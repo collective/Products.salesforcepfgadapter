@@ -3,6 +3,11 @@ Changelog
 
 1.9.0 (unreleased)
 
+- Avoid caching Salesforce field info on the adapter instance. Instead, use
+  the type description cache of the beatbox client (which can be purged via
+  the Salesforce base connector in the ZMI).
+  [davisagli]
+
 - Include the exception message in the fallback e-mail.
   [davisagli]
   

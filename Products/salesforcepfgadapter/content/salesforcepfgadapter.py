@@ -17,6 +17,7 @@ import sys
 # Zope imports
 from zope.interface import implements
 from AccessControl import ClassSecurityInfo
+from ComputedAttribute import ComputedAttribute
 from zExceptions import Redirect
 from Acquisition import aq_parent
 from zope.interface import classImplements
@@ -237,6 +238,7 @@ schema = ManagedSchema(schema.copy().fields())
 schema.moveSchemata('field mapping', -1)
 schema.moveSchemata('create vs. update', -1)
 
+
 class SalesforcePFGAdapter(FormActionAdapter):
     """ An adapter for PloneFormGen that saves results to Salesforce.
     """
@@ -251,18 +253,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
     meta_type = portal_type = 'SalesforcePFGAdapter'
     archetype_name = 'Salesforce Adapter'
     content_icon = 'salesforce.gif'
-    
-    def initializeArchetype(self, **kwargs):
-        """Initialize Private instance variables
-        """
-        FormActionAdapter.initializeArchetype(self, **kwargs)
-        
-        # All Salesforce fields for the current Salesforce object type. Since
-        # we need this for every row in our field mapping widget, it's better
-        # to just set it on the object when we set the Salesforce object type. 
-        # This way we don't query Salesforce for every field on our form.
-        self._fieldsForSFObjectType = {}
-    
+   
     security.declarePrivate('_evaluateExpression')
     def _evaluateExpression(self, expr):
         evaluate = False
@@ -659,9 +650,6 @@ due to an exception: %s
         # set the SFObjectType
         self.SFObjectType = newType
         
-        # clear out the cached field info
-        self._fieldsForSFObjectType = self._querySFFieldsForType()
-        
         # purge mappings and dependencies that are no longer valid
         for fname in ('fieldMap', 'dependencyMap',):
             _purgeInvalidMapping(fname)
@@ -802,13 +790,17 @@ due to an exception: %s
         return formFieldTitles
     
     def _querySFFieldsForType(self):
-        """Return a tuple of all the possible fields for the current
+        """Return a mapping of all the possible fields for the current
            Salesforce object type
         """
-        salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
-        salesforceFields = salesforce.describeSObjects(self.SFObjectType)[0].fields
-        return salesforceFields
-    
+        sfbc = getToolByName(self, 'portal_salesforcebaseconnector')
+        if self.SFObjectType not in sfbc.client.typeDescs:
+            sfbc.client.typeDescs[self.SFObjectType] = sfbc.describeSObjects(self.SFObjectType)[0]
+        return sfbc.client.typeDescs[self.SFObjectType].fields
+
+    # for backwards-compatibility
+    _fieldsForSFObjectType = ComputedAttribute(_querySFFieldsForType, 1)
+
     def _querySFObjectTypes(self):
         """Returns a tuple of all Salesforce object type names.
         """
