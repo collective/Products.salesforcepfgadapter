@@ -425,6 +425,8 @@ due to an exception: %s
             mailer.body_type = 'html'
             mailer.setBody_pre(message, mimetype='text/html')
             mailer.setBody_post(err_msg, mimetype='text/html')
+            if 'credit_card' in REQUEST.form:
+                REQUEST.form['credit_card'] = '(hidden)'
             mailer.send_form(fields, REQUEST)
     
     def _userIdToUpdate(self, sObject):
