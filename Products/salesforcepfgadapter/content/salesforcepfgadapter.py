@@ -501,6 +501,8 @@ due to an exception: %s
             if isinstance(value, date):
                 # make sure that the date gets interpreted as UTC
                 value = str(value) + ' +00:00'
+            if isinstance(value, float) and value.is_integer():
+                value = int(value)
             data[m['field_path']] = value
         
         obj_id = None

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.9.2 (unreleased)
+
+- During prepopulation, convert Salesforce numbers that are integers into
+  Python ints.
+  [davisagli]
+
 1.9.1 (2012-02-01)
 
 - If there's a field named ``credit_card``, don't include it in the fallback
