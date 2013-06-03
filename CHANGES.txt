@@ -3,6 +3,9 @@ Changelog
 
 1.9.2 (unreleased)
 
+- Install the base connector tool automatically.
+  [rpatterson]
+
 - During prepopulation, convert Salesforce numbers that are integers into
   Python ints.
   [davisagli]
