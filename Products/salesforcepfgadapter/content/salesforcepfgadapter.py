@@ -1,8 +1,8 @@
-""" 
-    
+"""
+
     An adapter for PloneFormGen that saves submitted form data
     to Salesforce.com
-    
+
 """
 
 __author__  = ''
@@ -116,7 +116,7 @@ schema = FormAdapterSchema.copy() + Schema((
              columns= {
                  "field_path" : FixedColumn("Form Field (path)", visible=False),
                  "form_field" : FixedColumn("Form Field"),
-                 "sf_field" : SelectColumn("Salesforce Field", 
+                 "sf_field" : SelectColumn("Salesforce Field",
                                            vocabulary="buildSFFieldOptionList")
              },
              i18n_domain = "salesforcepfgadapter",
@@ -168,7 +168,7 @@ schema = FormAdapterSchema.copy() + Schema((
              columns= {
                  "adapter_name" : FixedColumn("Possible Parent Adapters"),
                  "adapter_id" : FixedColumn("Possible Parent Adapters (id)", visible=False),
-                 "sf_field" : SelectColumn("Available Field IDs", 
+                 "sf_field" : SelectColumn("Available Field IDs",
                                            vocabulary="buildSFFieldOptionList")
              },
              i18n_domain = "salesforcepfgadapter",
@@ -243,17 +243,17 @@ class SalesforcePFGAdapter(FormActionAdapter):
     """ An adapter for PloneFormGen that saves results to Salesforce.
     """
     implements(interfaces.ISalesforcePFGAdapter)
-    
+
     schema = schema
     security = ClassSecurityInfo()
-    
+
     if not HAS_PLONE30:
         finalizeATCTSchema(schema, folderish=True, moveDiscussion=False)
-    
+
     meta_type = portal_type = 'SalesforcePFGAdapter'
     archetype_name = 'Salesforce Adapter'
     content_icon = 'salesforce.gif'
-   
+
     security.declarePrivate('_evaluateExpression')
     def _evaluateExpression(self, expr):
         evaluate = False
@@ -264,13 +264,13 @@ class SalesforcePFGAdapter(FormActionAdapter):
             evaluate = True
         if expr.startswith('string:'):
             evaluate = True
-        
+
         if evaluate:
             econtext = getExprContext(self, self)
             econtext.setGlobal('now', DateTime().ISO8601())
             return Expression(expr)(econtext)
         return expr
-    
+
     def _onSuccess(self, fields, REQUEST=None):
         """ The essential method of a PloneFormGen Adapter:
         - collect the submitted form data
@@ -280,7 +280,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
           and check the result
         """
         logger.debug('Calling onSuccess()')
-        # only execute if we're the last SF Adapter 
+        # only execute if we're the last SF Adapter
         # in the form; then sort and execute ALL
         execAdapters = self._listAllExecutableAdapters()
         if len(execAdapters) and self.getId() == execAdapters[-1].getId():
@@ -290,7 +290,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                 if not adapter._isExecutableAdapter():
                     logger.warn("""Adapter %s will not create a Salesforce object \
                                    either due to its execution condition or it has been \
-                                   disabled on the parent form.""" % adapter.getId()) 
+                                   disabled on the parent form.""" % adapter.getId())
                     continue
 
                 # start the object based on the form field mapping
@@ -311,7 +311,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         sObject[mapping['sf_field']] = value
 
                 salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
-                
+
                 if adapter.getCreationMode() == 'update':
                     # get the user's SF UID from the session
                     try:
@@ -332,11 +332,11 @@ class SalesforcePFGAdapter(FormActionAdapter):
                         actionIfNoExistingObject = adapter.getActionIfNoExistingObject()
                         if actionIfNoExistingObject == 'quiet_abort':
                             return
-                        
+
                         if len(sObject.keys()) <= 1:
                             logger.warn('No valid field mappings found. Not calling Salesforce.')
                             continue
-                        
+
                         if actionIfNoExistingObject == 'create':
                             result = salesforce.create(sObject)[0]
                         else:
@@ -347,7 +347,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     if len(sObject.keys()) <= 1:
                         logger.warn('No valid field mappings found. Not calling Salesforce.')
                         continue
-                
+
                     result = salesforce.create(sObject)[0]
 
                 if result['success']:
@@ -361,11 +361,11 @@ class SalesforcePFGAdapter(FormActionAdapter):
                     errorStr = 'Failed to %s %s in Salesforce: %s' % \
                         (adapter.getCreationMode(), str(adapter.SFObjectType), result['errors'][0]['message'])
                     raise Exception(errorStr)
-    
+
     security.declareProtected(View, 'onSuccess')
     def onSuccess(self, fields, REQUEST=None):
         # wrap _onSuccess so we can do fallback behavior when calls to Salesforce fail
-        
+
         message = None
         try:
             self._onSuccess(fields, REQUEST)
@@ -373,11 +373,11 @@ class SalesforcePFGAdapter(FormActionAdapter):
             from Products.salesforcepfgadapter.tests import TESTING
             if TESTING:
                 raise
-            
+
             # swallow the exception, but log it
             t, v = sys.exc_info()[:2]
             logger.exception('Unable to save form data to Salesforce. (%s)' % '/'.join(self.getPhysicalPath()))
-            
+
             formFolder = aq_parent(self)
             enabled_adapters = formFolder.getActionAdapter()
             adapters = [o for o in formFolder.objectValues() if IPloneFormGenActionAdapter.providedBy(o)]
@@ -385,7 +385,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
                                                    and o in enabled_adapters]
             inactive_savedata = [o for o in adapters if isinstance(o, FormSaveDataAdapter)
                                                      and o not in enabled_adapters]
-            
+
             # 1. If there's an enabled save data adapter, just suppress the exception
             #    so the data will still be saved.
             if active_savedata:
@@ -393,7 +393,7 @@ class SalesforcePFGAdapter(FormActionAdapter):
 Someone submitted this form, but the data couldn't be saved to Salesforce
 due to an exception: %s The data was recorded in this Saved-data adapter instead: %s
 """ % (formFolder.absolute_url(), active_savedata[0].absolute_url())
-            
+
             # 2. If there's a *disabled* save data adapter, call it.
             #    (This can be used to record data locally *only* when recording to Salesforce fails.)
             elif inactive_savedata:
@@ -402,7 +402,7 @@ Someone submitted this form, but the data couldn't be saved to Salesforce
 due to an exception: %s The data was recorded in this Saved-data adapter instead: %s
 """ % (formFolder.absolute_url(), inactive_savedata[0].absolute_url())
                 inactive_savedata[0].onSuccess(fields, REQUEST)
-            
+
             # 3. If there's no savedata adapter, send the data in an e-mail.
             else:
                 message = """
@@ -428,7 +428,7 @@ due to an exception: %s
             if 'credit_card' in REQUEST.form:
                 REQUEST.form['credit_card'] = '(hidden)'
             mailer.send_form(fields, REQUEST)
-    
+
     def _userIdToUpdate(self, sObject):
         if len(sObject.keys()) == 1:
             # only 'type' --> means no mapped fields, so do lookup now
@@ -437,7 +437,7 @@ due to an exception: %s
                 return
             return data['Id']
         return self.REQUEST.SESSION[(config.SESSION_KEY, self.UID())][0]
-    
+
     security.declarePrivate('retrieveData')
     def retrieveData(self):
         request = self.REQUEST
@@ -504,18 +504,18 @@ due to an exception: %s
             if isinstance(value, float) and value.is_integer():
                 value = int(value)
             data[m['field_path']] = value
-        
+
         obj_id = None
         if 'Id' in data:
             obj_id = data['Id']
         request.SESSION[(config.SESSION_KEY, self.UID())] = (obj_id, updateMatchExpression)
 
         return data
-    
+
     def _buildSObjectFromForm(self, fields, REQUEST=None):
         """ Used by the onSuccess handler to convert the fields from the form
             into the fields to be stored in Salesforce.
-            
+
             Also munges dates into the required (mm/dd/yyyy) format.
         """
         logger.debug('Calling _buildSObjectFromForm()')
@@ -528,8 +528,8 @@ due to an exception: %s
                 if formFieldValue:
                     formFieldValue = DateTime(formFieldValue + ' GMT+0').HTML4()
                 else:
-                    # we want to throw this value away rather than pass along 
-                    # to salesforce, which would ultimately raise a SoapFaultError 
+                    # we want to throw this value away rather than pass along
+                    # to salesforce, which would ultimately raise a SoapFaultError
                     # due to invalid xsd:dateTime formatting
                     continue
             elif field.isFileField():
@@ -549,11 +549,11 @@ due to an exception: %s
                         sObject[mimetypeFieldName] = mimetype
 
             salesforceFieldName = self._getSFFieldForFormField(formFieldPath, formPath)
-            
+
             if not salesforceFieldName:
                 # We haven't found a mapping to a Salesforce field.
                 continue
-            
+
             if 'creationMode' in self.Schema() and self.getCreationMode() == 'update' and formFieldValue == '':
                 # The adapter is in update mode and one of the fields has a value
                 # of an empty string. If that field is nillable in Salesforce, we
@@ -567,20 +567,20 @@ due to an exception: %s
                 # the Salesforce object field may have it's own ideas
                 # about data types and or default values.
                 continue
-            
+
             sObject[salesforceFieldName] = formFieldValue
         return sObject
-    
+
     security.declareProtected(ModifyPortalContent, 'setFieldMap')
     def setFieldMap(self, currentFieldMap):
         """Accept a possible fieldMapping value ala the following:
-        
+
             (
-                  {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'}, 
+                  {'field_path': 'replyto', 'form_field': 'Your E-Mail Address', 'sf_field': 'Email'},
                   {'field_path': 'topic', 'form_field': 'Subject', 'sf_field': 'FirstName'},
                   {'field_path': 'fieldset,comments', 'form_field': 'Comments', 'sf_field': ''}
             )
-            
+
            and iterate through each potential mapping to make certain that
            a field item at the path from the form still exists.  This is how
            we purge ineligible field mappings.
@@ -588,30 +588,30 @@ due to an exception: %s
         logger.debug('calling setFieldMap()')
         eligibleFieldPaths = [path for title, path in self._getIPloneFormGenFieldsPathTitlePair()]
         cleanMapping = []
-        
+
         for mapping in currentFieldMap:
             if mapping.has_key('field_path') and mapping['field_path'] in eligibleFieldPaths:
                 cleanMapping.append(mapping)
-                
+
         self.fieldMap = tuple(cleanMapping)
-    
+
     security.declareProtected(ModifyPortalContent, 'setDependencyMap')
     def setDependencyMap(self, currentDependencyMap):
         """Accept a possible dependencyMap value ala the following:
-        
+
             (
-                  {'adapter_id': 'replyto', 'adapter_name': 'Your E-Mail Address', 'sf_field': 'Email'}, 
+                  {'adapter_id': 'replyto', 'adapter_name': 'Your E-Mail Address', 'sf_field': 'Email'},
                   {'adapter_id': 'topic', 'adapter_name': 'Subject', 'sf_field': 'FirstName'},
                   {'adapter_id': 'fieldset,comments', 'adapter_name': 'Comments', 'sf_field': ''}
             )
-            
+
            and iterate through each potential mapping to make certain that
            an adapter from the form still exists.  This is how
            we purge ineligible adapter mappings.
-           
-           BBB - when we drop 2.5.x support after the 1.5 release cycle this should be 
-           reimplemented in an event-driven nature.  This current implementation and 
-           the setFieldMap implementation are insane.  Furthermore, an event driven 
+
+           BBB - when we drop 2.5.x support after the 1.5 release cycle this should be
+           reimplemented in an event-driven nature.  This current implementation and
+           the setFieldMap implementation are insane.  Furthermore, an event driven
            system could be made to retain the existing field mappings, rather than
            just clean them out.
         """
@@ -619,16 +619,16 @@ due to an exception: %s
         formFolder = aq_parent(self)
         eligibleAdapters = [(adapter.getId(),adapter.Title()) for adapter in formFolder.objectValues(SF_ADAPTER_TYPES)]
         cleanMapping = []
-        
+
         for mapping in currentDependencyMap:
             # check for the presence of keys, which won't exist on content creation
             # then make sure it's an eligible mapping
             if mapping.has_key('adapter_id') and mapping.has_key('adapter_name') and \
               (mapping['adapter_id'], mapping['adapter_name']) in eligibleAdapters:
                 cleanMapping.append(mapping)
-                
+
         self.dependencyMap = tuple(cleanMapping)
-    
+
     security.declareProtected(ModifyPortalContent, 'setSFObjectType')
     def setSFObjectType(self, newType):
         """When we set the Salesforce object type,
@@ -636,60 +636,60 @@ due to an exception: %s
            for our mapping selection menus.
         """
         logger.debug('Calling setSFObjectType()')
-        
+
         def _purgeInvalidMapping(fname):
             accessor = getattr(self, self.Schema().get(fname).accessor)
             mutator = getattr(self, self.Schema().get(fname).mutator)
-            
+
             eligible_mappings = []
             for mapping in accessor():
                 if mapping.has_key('sf_field') and not \
                   self._querySFFieldsForType().has_key(mapping['sf_field']):
                     continue
-                
+
                 eligible_mappings.append(mapping)
-            
+
             mutator(tuple(eligible_mappings))
-        
+
         # set the SFObjectType
         self.SFObjectType = newType
-        
+
         # purge mappings and dependencies that are no longer valid
         for fname in ('fieldMap', 'dependencyMap',):
             _purgeInvalidMapping(fname)
-        
-    
+
+
     security.declareProtected(ModifyPortalContent, 'displaySFObjectTypes')
     def displaySFObjectTypes(self):
-        logger.debug('Calling displaySFObjectTypes()')        
-        """ returns vocabulary for available Salesforce Object Types 
-            we can create. 
+        logger.debug('Calling displaySFObjectTypes()')
+        """ returns vocabulary for available Salesforce Object Types
+            we can create.
         """
         types = self._querySFObjectTypes()
         typesDisplay = DisplayList()
         for type in types:
             typesDisplay.add(type, type)
         return typesDisplay
-    
+
     def _requiredFieldSorter(self, a, b):
         """Custom sort function
-        Any fields marked as required should appear first, and sorted, in the list, 
+        Any fields marked as required should appear first, and sorted, in the list,
         followed by all non-required fields, also sorted. This:
             tuples = [
-                        ('A', 'A'), 
-                        ('B','B (required)'), 
-                        ('E', 'E'), 
-                        ('Z','Z (required)'), 
+                        ('A', 'A'),
+                        ('B','B (required)'),
+                        ('E', 'E'),
+                        ('Z','Z (required)'),
                     ]
-                    
+
         would be sorted to:
             tuples = [
-                        ('B','B (required)'), 
-                        ('Z','Z (required)'), 
-                        ('A', 'A'), 
-                        ('E', 'E'), 
+                        ('B','B (required)'),
+                        ('Z','Z (required)'),
+                        ('A', 'A'),
+                        ('E', 'E'),
                     ]
-        
+
         """
         if (a[1].endswith(REQUIRED_MARKER) and b[1].endswith(REQUIRED_MARKER)) or \
                 (not a[1].endswith(REQUIRED_MARKER) and not b[1].endswith(REQUIRED_MARKER)):
@@ -703,7 +703,7 @@ due to an exception: %s
                 return -1
             else:
                 return 1
-    
+
     security.declareProtected(ModifyPortalContent, 'buildSFFieldOptionList')
     def buildSFFieldOptionList(self):
         """Returns a DisplayList of all the fields
@@ -711,11 +711,11 @@ due to an exception: %s
            type.
         """
         sfFields = self._querySFFieldsForType()
-        
+
         fieldList = []
         for k, v in sfFields.items():
             # determine whether each field is required and mark appropriately
-            
+
             if v.updateable or v.createable:
                 if v.nillable or v.defaultedOnCreate or not v.createable:
                     fieldList.append((k, k))
@@ -728,24 +728,24 @@ due to an exception: %s
         fieldList.sort(self._requiredFieldSorter)
         fieldList.insert(0, ('', ''))
         dl = DisplayList(fieldList)
-        
+
         return dl
-    
+
     security.declareProtected(ModifyPortalContent, 'generateFormFieldRows')
     def generateFormFieldRows(self):
         """This method returns a list of rows for the field mapping
            ui. One row is returned for each field in the form folder.
         """
         fixedRows = []
-        
+
         for formFieldTitle, formFieldPath in self._getIPloneFormGenFieldsPathTitlePair():
             logger.debug("creating mapper row for %s" % formFieldTitle)
             fixedRows.append(FixedRow(keyColumn="field_path",
-                                      initialData={"form_field" : formFieldTitle, 
+                                      initialData={"form_field" : formFieldTitle,
                                                    "field_path" : formFieldPath,
                                                    "sf_field" : ""}))
         return fixedRows
-    
+
     security.declareProtected(ModifyPortalContent, 'getLocalSFAdapters')
     def getLocalSFAdapters(self):
         """This method returns a list of rows for the dependency mapping
@@ -753,7 +753,7 @@ due to an exception: %s
         """
         fixedRows = []
         formFolder = aq_parent(self)
-        
+
         for item_name in formFolder.objectIds():
             adapterObj = getattr(formFolder, item_name)
             if adapterObj.meta_type == 'SalesforcePFGAdapter' and adapterObj.getId() != self.getId():
@@ -762,12 +762,12 @@ due to an exception: %s
                                                        "adapter_id" : adapterObj.getId(),
                                                        "sf_field" : ""}))
         return fixedRows
-    
+
     def _getIPloneFormGenFieldsPathTitlePair(self):
         formFolder = aq_parent(self)
         formFolderPath = formFolder.getPhysicalPath()
         formFieldTitles = []
-        
+
         for formField in formFolder.objectIds():
             fieldObj = getattr(formFolder, formField)
             title = fieldObj.Title().strip()
@@ -778,7 +778,7 @@ due to an exception: %s
             if isinstance(fieldObj, FGFileField):
                 formFieldTitles.append((title + ' Filename', path + ',filename'))
                 formFieldTitles.append((title + ' Mimetype', path + ',mimetype'))
-            
+
             # can we also inspect further down the chain
             if fieldObj.isPrincipiaFolderish:
                 # since nested folders only go 1 level deep
@@ -790,17 +790,18 @@ due to an exception: %s
                         formFieldTitles.append(("%s --> %s" % (fieldObj.Title().strip(),
                                                                subFieldObj.Title().strip()),
                                                 ",".join(subFieldObj.getPhysicalPath()[len(formFolderPath):])))
-        
+
         return formFieldTitles
-    
+
     def _querySFFieldsForType(self):
         """Return a mapping of all the possible fields for the current
            Salesforce object type
         """
         sfbc = getToolByName(self, 'portal_salesforcebaseconnector')
-        if self.SFObjectType not in sfbc.client.typeDescs:
-            sfbc.client.typeDescs[self.SFObjectType] = sfbc.describeSObjects(self.SFObjectType)[0]
-        return sfbc.client.typeDescs[self.SFObjectType].fields
+        client = sfbc.client()
+        if self.SFObjectType not in client.typeDescs:
+            client.typeDescs[self.SFObjectType] = sfbc.describeSObjects(self.SFObjectType)[0]
+        return client.typeDescs[self.SFObjectType].fields
 
     # for backwards-compatibility
     _fieldsForSFObjectType = ComputedAttribute(_querySFFieldsForType, 1)
@@ -811,52 +812,52 @@ due to an exception: %s
         salesforce = getToolByName(self, 'portal_salesforcebaseconnector')
         types = salesforce.describeGlobal()['types']
         return types
-    
+
     def _getSFFieldForFormField(self, full_field_path, full_form_path):
         """  Return the Salesforce field
-             mapped to a given Form field. 
+             mapped to a given Form field.
         """
         sfField = None
         for mapping in self.fieldMap:
             split_field_path = mapping['field_path'].split(',')
             relative_path = full_field_path[len(full_form_path):]
             if tuple(split_field_path) == tuple(relative_path) and mapping['sf_field']:
-                sfField = mapping['sf_field'] 
+                sfField = mapping['sf_field']
                 break
-        
+
         return sfField
-    
+
     def _isExecutableAdapter(self):
-        """Check possible conditions for when an adapter 
+        """Check possible conditions for when an adapter
            is disabled.  These include:
-           
+
              1) non-true execCondition on the adapter
              2) not active within the parent form folder
         """
         formFolder = aq_parent(self)
-        
+
         if safe_hasattr(self, 'execCondition') and \
           len(self.getRawExecCondition()):
             # evaluate the execCondition.
             # create a context for expression evaluation
             context = getExprContext(formFolder, self)
             return self.getExecCondition(expression_context=context)
-        
+
         if self.getId() not in formFolder.getRawActionAdapter():
             return False
-        
+
         return True
-    
+
     def _listAllExecutableAdapters(self):
         """Ugh, we wake up all the Salesforce Adapters
            to determine which are executable as determined above
         """
         formFolder = aq_parent(self)
         adapters = formFolder.objectValues(SF_ADAPTER_TYPES)
-        
+
         return [adapter for adapter in adapters if adapter._isExecutableAdapter()]
-        
-    
+
+
     security.declareProtected(View, 'getSortedSFAdapters')
     def getSortedSFAdapters(self):
         """This method inspects the parent form
@@ -871,22 +872,22 @@ due to an exception: %s
             if id not in sorted_:
                 sorted_.append(id)
             return sorted_
-        
+
         formFolder = aq_parent(self)
         sorted_ = []
         for id in formFolder.objectIds(SF_ADAPTER_TYPES):
             # we manually call our validation code to ensure
             # we don't walk into an infinite loop.  this serves
-            # as protection for adapters that may have been 
+            # as protection for adapters that may have been
             # configured outside the context of Archetypes validation
             validator = validators.CircularDependencyValidator("validator")
             adapter = getattr(formFolder, id)
             if validator(adapter.getDependencyMap(), instance=adapter) is not True:
                 raise validators.CircularChainException
             sorted_ = _process(formFolder, id, sorted_)
-        
+
         return sorted_
-    
+
     def processForm(self, data=1, metadata=0, REQUEST=None, values=None):
         ATCTContent.processForm(self, data, metadata, REQUEST, values)
 

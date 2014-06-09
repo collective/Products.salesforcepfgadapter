@@ -3,6 +3,10 @@ Changelog
 
 1.9.2 (unreleased)
 
+- The sfbc client is now a method rather than a property. See Products.saleforcebaseconnector
+  v 1.5.
+  [smcmahon]
+
 - Install the base connector tool automatically.
   [rpatterson]
 
