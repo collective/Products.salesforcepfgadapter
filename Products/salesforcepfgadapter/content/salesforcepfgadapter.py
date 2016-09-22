@@ -448,6 +448,11 @@ due to an exception: %s
         updateMatchExpression = self.getUpdateMatchExpression(expression_context = econtext)
         mappings = self.getFieldMap()
 
+        # Don't query Salesforce if there is no match expression
+        if not updateMatchExpression:
+            request.SESSION[(config.SESSION_KEY, self.UID())] = (None, updateMatchExpression)
+            return {}
+
         # determine which fields to retrieve
         fieldList = [m['sf_field'] for m in mappings if m['sf_field']]
         # we always want the ID

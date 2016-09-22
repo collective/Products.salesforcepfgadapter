@@ -3,6 +3,9 @@ Changelog
 
 1.9.2 (unreleased)
 
+- Avoid querying Salesforce when the match expression is blank.
+  [davisagli]
+
 - The sfbc client is now a method rather than a property. See Products.saleforcebaseconnector
   v 1.5.
   [smcmahon]
