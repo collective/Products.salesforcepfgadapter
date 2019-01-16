@@ -430,7 +430,7 @@ due to an exception: %s
             mailer.send_form(fields, REQUEST)
 
     def _userIdToUpdate(self, sObject):
-        if len(sObject.keys()) == 1:
+        if 'Id' not in sObject.keys():
             # only 'type' --> means no mapped fields, so do lookup now
             data = self.retrieveData()
             if not data:
