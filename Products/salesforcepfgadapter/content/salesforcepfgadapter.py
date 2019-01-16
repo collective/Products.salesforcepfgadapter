@@ -34,6 +34,7 @@ except ImportError:
 from Products.CMFCore.Expression import Expression
 
 # Plone imports
+from Products.CMFPlone.interfaces import IMailSchema
 from Products.CMFPlone.utils import safe_hasattr
 from Products.CMFPlone.PloneBaseTool import getExprContext
 from Products.Archetypes.public import StringField, StringWidget, \
@@ -413,13 +414,16 @@ due to an exception: %s
             err_msg = 'Technical details on the exception: '
             err_msg += ''.join(traceback.format_exception_only(t, v))
 
+
+            registry = getToolByName(self, 'portal_registry')
+            site_from_address = registry.forInterface(IMailSchema, prefix='plone').email_from_address
             mailer = FormMailerAdapter('dummy').__of__(formFolder)
             mailer.msg_subject = 'Form submission to Salesforce failed'
             mailer.subject_field = None
             # we rely on the PFG mailer's logic to choose a good fallback recipient
             mailer.recipient_name = ''
             mailer.recipient_email = ''
-            mailer.cc_recipients = []
+            mailer.cc_recipients = [site_from_address, ]
             mailer.bcc_recipients = []
             mailer.additional_headers = []
             mailer.body_type = 'html'
